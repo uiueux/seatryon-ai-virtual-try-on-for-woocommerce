@@ -174,17 +174,20 @@ final class ProductFields {
 			return;
 		}
 
-		$enabled_raw    = wp_unslash( $_POST[ self::META_ENABLED ] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Validated against an exact allowlist below.
-		$prompt_raw     = wp_unslash( $_POST[ self::META_PROMPT ] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- UTF-8 is intentionally checked before sanitization below.
-		$experience_raw = wp_unslash( $_POST[ self::META_EXPERIENCE_TYPE ] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Validated against ExperienceType below.
-		$image_id_raw   = wp_unslash( $_POST[ self::META_PRODUCT_IMAGE_ID ] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Validated as an image attachment ID below.
+		$enabled_raw    = isset( $_POST[ self::META_ENABLED ] ) && is_scalar( $_POST[ self::META_ENABLED ] )
+			? sanitize_key( (string) wp_unslash( $_POST[ self::META_ENABLED ] ) )
+			: '';
+		$prompt_raw     = isset( $_POST[ self::META_PROMPT ] ) && is_string( $_POST[ self::META_PROMPT ] )
+			? sanitize_textarea_field( wp_unslash( $_POST[ self::META_PROMPT ] ) )
+			: '';
+		$experience_raw = isset( $_POST[ self::META_EXPERIENCE_TYPE ] ) && is_scalar( $_POST[ self::META_EXPERIENCE_TYPE ] )
+			? sanitize_key( (string) wp_unslash( $_POST[ self::META_EXPERIENCE_TYPE ] ) )
+			: '';
+		$image_id_raw   = isset( $_POST[ self::META_PRODUCT_IMAGE_ID ] ) && is_scalar( $_POST[ self::META_PRODUCT_IMAGE_ID ] )
+			? sanitize_text_field( (string) wp_unslash( $_POST[ self::META_PRODUCT_IMAGE_ID ] ) )
+			: null;
 
-		if ( ! is_string( $enabled_raw ) || ! is_string( $prompt_raw ) || ! is_string( $experience_raw ) ) {
-			$this->add_error( ProductFieldValidationException::INVALID_EXPERIENCE );
-			return;
-		}
-
-		if ( ! is_scalar( $image_id_raw ) ) {
+		if ( null === $image_id_raw ) {
 			$this->add_error( ProductFieldValidationException::INVALID_PRODUCT_IMAGE );
 			return;
 		}

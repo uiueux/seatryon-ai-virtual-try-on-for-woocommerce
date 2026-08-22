@@ -56,13 +56,9 @@ final class SeaAIConnectionController {
 		$base_url = isset( $_POST['base_url'] ) && is_string( $_POST['base_url'] )
 			? sanitize_text_field( wp_unslash( $_POST['base_url'] ) )
 			: '';
-		// A generic text sanitizer can corrupt credentials. The tester strips
-		// control characters and enforces the exact SeaAI key format instead.
-		// phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$api_key = isset( $_POST['api_key'] ) && is_string( $_POST['api_key'] )
-			? wp_unslash( $_POST['api_key'] )
+		$api_key  = isset( $_POST['api_key'] ) && is_string( $_POST['api_key'] )
+			? sanitize_text_field( wp_unslash( $_POST['api_key'] ) )
 			: '';
-		// phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 		$result = $this->tester->test( $base_url, $api_key );
 		if ( $result->is_success() ) {

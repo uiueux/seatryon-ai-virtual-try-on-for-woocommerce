@@ -87,6 +87,10 @@ namespace SeaTryOn\Admin\Product {
 		return trim( strip_tags( $value ) );
 	}
 
+	function sanitize_key( string $value ): string {
+		return strtolower( preg_replace( '/[^a-z0-9_\\-]/i', '', $value ) );
+	}
+
 	function current_user_can( string $capability, int $object_id ): bool {
 		unset( $capability, $object_id );
 		return (bool) $GLOBALS['sea_tryon_test_can_edit'];

@@ -19,6 +19,21 @@ namespace {
 			return filter_var( $url, FILTER_VALIDATE_URL ) ? $url : '';
 		}
 	}
+
+	if ( ! function_exists( 'wp_unslash' ) ) {
+		function wp_unslash( $value ) {
+			return is_string( $value ) ? stripslashes( $value ) : $value;
+		}
+	}
+
+	if ( ! function_exists( 'sanitize_text_field' ) ) {
+		function sanitize_text_field( string $value ): string {
+			$value = strip_tags( $value );
+			$value = preg_replace( '/[\\r\\n\\t]+/', '', $value );
+
+			return trim( (string) $value );
+		}
+	}
 }
 
 namespace SeaTryOn\Tests\Admin\Settings {

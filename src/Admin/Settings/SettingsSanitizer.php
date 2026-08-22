@@ -102,7 +102,9 @@ final class SettingsSanitizer {
 	public function sanitize_seaai_api_key( $value, $option = null, $raw_value = null ): string {
 		unset( $value, $option );
 
-		return $this->sanitize_secret( SettingsRepository::OPTION_SEAAI_API_KEY, $raw_value );
+		$submitted = is_scalar( $raw_value ) ? sanitize_text_field( wp_unslash( (string) $raw_value ) ) : '';
+
+		return $this->sanitize_secret( SettingsRepository::OPTION_SEAAI_API_KEY, $submitted );
 	}
 
 	/**
