@@ -27,6 +27,15 @@ The extension uses the WooCommerce Classic Product Editor for product-level sett
 
 See [Merchant Setup](sea-tryon-doc/guides/MERCHANT_SETUP.md), [Privacy and Data Flow](sea-tryon-doc/guides/PRIVACY_DATA_FLOW.md), and the [Operations Runbook](sea-tryon-doc/guides/OPERATIONS_RUNBOOK.md).
 
+## External services
+
+SeaTryon relies on an external image-generation service for every preview. Generation occurs only after the merchant enables Virtual Try-On and a shopper submits an image and a request.
+
+- **WordPress AI Client and the selected connector:** The plugin sends the shopper's uploaded person or room image, the current WooCommerce product image, and the prompt (including the merchant's product instruction) to the provider configured in WordPress **Settings > Connectors**. WordPress core owns the connector credentials. If that connector uses OpenAI, see the [OpenAI Services Agreement](https://openai.com/policies/services-agreement/) and [OpenAI Privacy Policy](https://openai.com/policies/privacy-policy/). Other connectors have their own terms and privacy policies, which the site owner must review.
+- **SeaAI Universal X gateway:** When selected, the plugin uploads the same two images and prompt to the configured SeaAI API root, then downloads the generated result. The default is `https://theminitech.net/wp-json/seaai/v1`. The configured SeaAI API key is sent only as an authorization credential during connection tests and generation. See TheMiniTech's [Terms of Service](https://theminitech.net/zh/terms-of-service/) and [Privacy Policy](https://theminitech.com/privacy-policy/).
+
+The plugin does not intentionally send customer names, email addresses, user IDs, orders, billing or shipping details, cookies, session tokens, or API keys as prompt data. Store owners must obtain required consent, review provider retention and processing terms, and update their site's privacy notice.
+
 ## Development setup
 
 Install PHP and JavaScript dependencies:

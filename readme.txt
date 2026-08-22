@@ -23,6 +23,22 @@ When generation is enabled, a customer's uploaded image and the selected product
 
 Input images, generated images, and temporary job data are stored outside the WordPress Media Library and are scheduled for deletion within the configured retention period. The default maximum retention is 24 hours. Store owners are responsible for reviewing the selected provider's terms and privacy policy and for updating their site's privacy notice.
 
+== External services ==
+
+SeaTryon relies on an external image-generation service for each virtual try-on or product-placement preview. The store owner must configure either a WordPress AI Client connector or the SeaAI Universal X gateway. No image is transmitted until Virtual Try-On is enabled and a shopper submits a generation request after selecting an image.
+
+=== WordPress AI Client and the selected connector ===
+
+The plugin passes the shopper's uploaded person or room image, the current WooCommerce product image, and the generation prompt (including the merchant's product-specific instruction) to the provider selected under WordPress Settings > Connectors. WordPress core manages the connector credentials; this plugin does not store or expose them. The selected connector may transmit this data to its own AI service. If the connector uses OpenAI, review the [OpenAI Services Agreement](https://openai.com/policies/services-agreement/) and [OpenAI Privacy Policy](https://openai.com/policies/privacy-policy/). If another connector is selected, the store owner must review that provider's current terms and privacy policy before enabling generation.
+
+The plugin does not intentionally send customer names, email addresses, user IDs, orders, billing or shipping details, cookies, session tokens, or API keys as prompt data. The provider may receive technical request metadata required to operate its service.
+
+=== SeaAI Universal X gateway ===
+
+When SeaAI is selected, the plugin sends the same two images and the generation prompt to the configured SeaAI API root. The default gateway is `https://theminitech.net/wp-json/seaai/v1`; the store owner may configure another HTTPS SeaAI gateway. The images are uploaded for the generation request, and the generated result is downloaded from that gateway. The configured SeaAI API key is sent in an authorization header when the store owner tests the connection and when a generation request runs. Review TheMiniTech's [Terms of Service](https://theminitech.net/zh/terms-of-service/) and [Privacy Policy](https://theminitech.com/privacy-policy/) before using this gateway.
+
+External providers control their own processing, retention, hosting locations, and policies. Store owners are responsible for obtaining any required consent, reviewing the linked provider terms and privacy policy, and updating their site's privacy notice.
+
 = Compatibility =
 
 * WordPress 7.0 or newer.
@@ -37,7 +53,7 @@ Local validation passed with WooCommerce 10.9.4, Storefront 4.6.2, Twenty Twenty
 
 The complete human-readable source code and build tools for this plugin are publicly maintained at:
 
-https://github.com/uiueux/woo-tryon
+https://github.com/uiueux/seatryon-ai-virtual-try-on-for-woocommerce
 
 The shipped JavaScript bundles are generated from `assets/src/frontend.js`, `assets/src/admin.js`, and `blocks/virtual-try-on/virtual-try-on-editor.js`. The shipped stylesheets are generated from `assets/src/frontend.scss` and `assets/src/admin.scss`. The public repository also contains the block source, tests, build scripts, and package lock file used to reproduce the release assets.
 
