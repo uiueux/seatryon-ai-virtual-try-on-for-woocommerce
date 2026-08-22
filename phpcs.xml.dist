@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<ruleset name="Sea Try-On">
+	<description>WordPress coding standards for Sea Try-On.</description>
+
+	<file>sea-tryon.php</file>
+	<file>uninstall.php</file>
+	<file>src</file>
+
+	<exclude-pattern>vendor/*</exclude-pattern>
+	<exclude-pattern>node_modules/*</exclude-pattern>
+	<exclude-pattern>build/*</exclude-pattern>
+
+	<arg name="basepath" value="."/>
+	<arg name="colors"/>
+	<arg value="ps"/>
+	<arg name="extensions" value="php"/>
+
+	<config name="minimum_supported_wp_version" value="7.0"/>
+	<config name="testVersion" value="7.4-"/>
+
+	<rule ref="WordPress">
+		<!-- PSR-4 class paths intentionally follow namespace/class casing. -->
+		<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+		<exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+	</rule>
+	<rule ref="WordPress-Extra"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="seatryon-ai-virtual-try-on-for-woocommerce"/>
+			</property>
+		</properties>
+	</rule>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="sea_tryon"/>
+				<element value="SEA_TRYON"/>
+				<element value="SeaTryOn"/>
+			</property>
+		</properties>
+	</rule>
+</ruleset>

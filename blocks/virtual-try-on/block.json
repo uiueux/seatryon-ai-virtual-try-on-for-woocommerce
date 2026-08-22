@@ -1,0 +1,21 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "sea-tryon/virtual-try-on",
+	"version": "0.1.0",
+	"title": "Virtual Try-On",
+	"category": "woocommerce",
+	"icon": "visibility",
+	"description": "Display the Virtual Try-On button for an eligible product.",
+	"textdomain": "seatryon-ai-virtual-try-on-for-woocommerce",
+	"usesContext": [ "postId" ],
+	"supports": {
+		"html": false,
+		"multiple": false,
+		"spacing": {
+			"margin": true
+		}
+	},
+	"editorScript": "sea-tryon-virtual-try-on-editor",
+	"render": "file:./render.php"
+}

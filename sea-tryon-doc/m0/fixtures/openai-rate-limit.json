@@ -1,0 +1,35 @@
+{
+  "fixture_version": 1,
+  "provider": "openai",
+  "case": "transient_rate_limit",
+  "request": {
+    "method": "POST",
+    "path": "/v1/images/edits",
+    "model": "gpt-image-2",
+    "image_part_count": 2
+  },
+  "response": {
+    "status": 429,
+    "headers": {
+      "content-type": "application/json",
+      "retry-after": "12",
+      "x-request-id": "req_mock_openai_rate_limit_001"
+    },
+    "body": {
+      "error": {
+        "message": "Rate limit reached for requests. Please retry after a short delay.",
+        "type": "rate_limit_error",
+        "param": null,
+        "code": "rate_limit_exceeded"
+      }
+    }
+  },
+  "expect": {
+    "outcome": "failure",
+    "plugin_error_code": "openai_rate_limited",
+    "retry": true,
+    "retry_after_seconds": 12,
+    "maximum_total_attempts": 3,
+    "expose_raw_provider_message": false
+  }
+}

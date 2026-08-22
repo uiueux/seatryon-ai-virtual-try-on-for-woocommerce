@@ -1,0 +1,32 @@
+{
+	"name": "sea-tryon",
+	"version": "1.1.0",
+	"private": true,
+	"description": "Build and test tooling for the Sea Try-On WooCommerce extension.",
+	"license": "GPL-2.0-or-later",
+	"engines": {
+		"node": ">=20.19.0 <25",
+		"npm": ">=10"
+	},
+	"scripts": {
+		"build": "wp-scripts build assets/src/frontend.js assets/src/admin.js blocks/virtual-try-on/virtual-try-on-editor.js --output-path=assets/build && npm run build:strip-maps && npm run build:verify",
+		"build:strip-maps": "node scripts/remove-source-maps.mjs",
+		"build:verify": "node scripts/verify-build.mjs",
+		"check-engines": "wp-scripts check-engines",
+		"format": "wp-scripts format assets/src blocks/virtual-try-on scripts package.json .wp-env.json",
+		"lint": "npm run lint:js && npm run lint:css",
+		"lint:css": "wp-scripts lint-style \"assets/src/**/*.scss\"",
+		"lint:js": "wp-scripts lint-js assets/src blocks/virtual-try-on scripts",
+		"start": "wp-scripts start assets/src/frontend.js assets/src/admin.js blocks/virtual-try-on/virtual-try-on-editor.js --output-path=assets/build",
+		"test": "npm run test:unit",
+		"test:unit": "wp-scripts test-unit-js --passWithNoTests",
+		"wp-env": "wp-env",
+		"wp-env:start": "wp-env start",
+		"wp-env:stop": "wp-env stop"
+	},
+	"devDependencies": {
+		"@wordpress/env": "11.12.0",
+		"@wordpress/scripts": "34.0.0",
+		"axe-core": "4.13.0"
+	}
+}

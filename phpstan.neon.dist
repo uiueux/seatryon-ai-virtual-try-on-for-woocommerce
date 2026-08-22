@@ -1,0 +1,19 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 6
+    paths:
+        - sea-tryon.php
+        - uninstall.php
+        - src
+
+    excludePaths:
+        - vendor
+        - node_modules
+        - build
+        - tests
+
+    scanFiles:
+        - vendor/php-stubs/woocommerce-stubs/woocommerce-stubs.php
+        - stubs/wordpress-ai-client.stub.php

@@ -1,0 +1,94 @@
+.sea-tryon-admin {
+	--sea-tryon-admin-border: #c3c4c7;
+	--sea-tryon-admin-surface: #fff;
+
+	background: var(--sea-tryon-admin-surface);
+	border: 1px solid var(--sea-tryon-admin-border);
+	box-sizing: border-box;
+	max-width: 960px;
+	padding: 24px;
+}
+
+.sea-tryon-admin[aria-busy="true"] {
+	cursor: progress;
+	opacity: 0.7;
+}
+
+.sea-tryon-product-image-field {
+	display: inline-flex;
+	align-items: flex-start;
+	flex-direction: column;
+	gap: 10px;
+	width: 50%;
+}
+
+.sea-tryon-product-image__preview:empty {
+	display: none;
+}
+
+.sea-tryon-product-image__thumbnail {
+	display: block;
+	box-sizing: border-box;
+	width: 120px;
+	height: 120px;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	background: #f6f7f7;
+	object-fit: contain;
+}
+
+.sea-tryon-product-image__actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.sea-tryon-product-image-field > .description {
+	display: block;
+}
+
+.sea-tryon-seaai-test {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-left: 8px;
+	vertical-align: middle;
+}
+
+.sea-tryon-seaai-test__spinner {
+	float: none;
+	margin: 0;
+	visibility: hidden;
+}
+
+.sea-tryon-seaai-test.is-testing .sea-tryon-seaai-test__spinner {
+	visibility: visible;
+}
+
+.sea-tryon-seaai-test__status {
+	min-height: 20px;
+	margin-top: 8px;
+}
+
+.sea-tryon-seaai-test__status:empty {
+	display: none;
+}
+
+.sea-tryon-seaai-test__status[data-state="success"] {
+	color: #008a20;
+}
+
+.sea-tryon-seaai-test__status[data-state="error"] {
+	color: #b32d2e;
+}
+
+@media screen and (max-width: 782px) {
+
+	.sea-tryon-product-image-field {
+		width: 100%;
+	}
+
+	.sea-tryon-seaai-test {
+		margin: 8px 0 0;
+	}
+}

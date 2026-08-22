@@ -1,0 +1,78 @@
+name: Release package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: SemVer version for the ZIP filename
+        required: true
+        default: 1.0.0
+        type: string
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Build and audit ZIP
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install JavaScript dependencies
+        run: npm ci
+
+      - name: Build production assets
+        run: npm run build
+
+      - name: Resolve package version
+        id: version
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [[ -n "$INPUT_VERSION" ]]; then
+            version="$INPUT_VERSION"
+          else
+            version="${REF_NAME#v}"
+          fi
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            printf 'Invalid release version: %s\n' "$version" >&2
+            exit 1
+          fi
+          printf 'value=%s\n' "$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build audited release ZIP
+        run: bash bin/build-zip.sh "${{ steps.version.outputs.value }}"
+
+      - name: Audit ZIP contents
+        shell: bash
+        env:
+          ZIP_FILE: dist/sea-tryon-${{ steps.version.outputs.value }}.zip
+        run: |
+          unzip -Z1 "$ZIP_FILE" > dist/zip-contents.txt
+          if grep -E '(^|/)(sea-tryon-doc|tests|fixtures|node_modules|vendor|\.git|\.github|bin)(/|$)|\.map$|(^|/)\.env($|\.)|\.(key|pem)$' dist/zip-contents.txt; then
+            echo 'Release ZIP contains a forbidden path.' >&2
+            exit 1
+          fi
+          unzip -q "$ZIP_FILE" -d dist/audit
+          bash bin/audit-dist.sh dist/audit/sea-tryon
+
+      - name: Upload release package
+        uses: actions/upload-artifact@v4
+        with:
+          name: sea-tryon-${{ steps.version.outputs.value }}
+          path: dist/sea-tryon-${{ steps.version.outputs.value }}.zip
+          if-no-files-found: error

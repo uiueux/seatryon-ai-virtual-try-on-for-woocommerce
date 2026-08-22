@@ -1,0 +1,35 @@
+{
+  "fixture_version": 1,
+  "provider": "openai",
+  "case": "transient_server_error",
+  "request": {
+    "method": "POST",
+    "path": "/v1/images/edits",
+    "model": "gpt-image-2",
+    "image_part_count": 2
+  },
+  "response": {
+    "status": 503,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_mock_openai_server_error_001"
+    },
+    "body": {
+      "error": {
+        "message": "The service is temporarily unavailable. Please try again later.",
+        "type": "server_error",
+        "param": null,
+        "code": "service_unavailable"
+      }
+    }
+  },
+  "expect": {
+    "outcome": "failure",
+    "plugin_error_code": "openai_service_unavailable",
+    "retry": true,
+    "honor_retry_after": false,
+    "use_bounded_exponential_backoff": true,
+    "maximum_total_attempts": 3,
+    "expose_raw_provider_message": false
+  }
+}

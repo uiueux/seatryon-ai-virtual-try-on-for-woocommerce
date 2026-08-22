@@ -1,0 +1,32 @@
+{
+  "fixture_version": 1,
+  "provider": "openai",
+  "case": "image_generation_user_error",
+  "request": {
+    "method": "POST",
+    "path": "/v1/images/edits",
+    "model": "gpt-image-2",
+    "image_part_count": 2
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_mock_openai_user_error_001"
+    },
+    "body": {
+      "error": {
+        "message": "The image generation request could not be completed. Revise the prompt or input images.",
+        "type": "image_generation_user_error",
+        "param": null,
+        "code": "image_generation_user_error"
+      }
+    }
+  },
+  "expect": {
+    "outcome": "failure",
+    "plugin_error_code": "openai_image_user_error",
+    "retry": false,
+    "expose_raw_provider_message": false
+  }
+}

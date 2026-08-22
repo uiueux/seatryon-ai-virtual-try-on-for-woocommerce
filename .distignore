@@ -1,0 +1,62 @@
+# Version-control and automation files.
+/.git/
+/.github/
+/.gitignore
+/.gitattributes
+/.distignore
+
+# Product and internal development documentation.
+/README.md
+/CHANGELOG.md
+/HANDOFF.md
+/design-qa.md
+/sea-tryon-doc/
+
+# Development tools, sources, and test artifacts.
+/bin/
+/scripts/
+/stubs/
+/tests/
+/fixtures/
+/assets/src/
+/node_modules/
+/vendor/
+/coverage/
+/dist/
+/.wp-env/
+/.wp-env.json
+/.phpunit.cache/
+/.phpunit.result.cache
+/.phpcs-cache
+/.phpstan.cache/
+
+# Dependency and tool configuration is not needed at runtime.
+/composer.json
+/composer.lock
+/package.json
+/package-lock.json
+/phpcs.xml
+/phpcs.xml.dist
+/phpunit.xml
+/phpunit.xml.dist
+/phpstan.neon
+/phpstan.neon.dist
+/webpack.config.js
+
+# Generated debug files and source maps.
+*.log
+*.map
+
+# Local credentials and private key material must never ship.
+.env
+.env.*
+auth.json
+secrets.*
+*.key
+*.pem
+
+# Operating-system and editor metadata.
+.DS_Store
+Thumbs.db
+/.idea/
+/.vscode/

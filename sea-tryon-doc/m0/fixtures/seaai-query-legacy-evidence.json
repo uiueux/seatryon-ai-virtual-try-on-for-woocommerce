@@ -1,0 +1,25 @@
+{
+  "case": "legacy_query_route_evidence_not_universal_x_contract",
+  "request": {
+    "method": "POST",
+    "path": "/forward/image/query",
+    "headers": {
+      "Authorization": "Bearer <redacted>",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "task_id": "legacy-provider-task-123"
+    }
+  },
+  "possible_passthrough_response": {
+    "http_status": 200,
+    "body": {
+      "taskId": "legacy-provider-task-123",
+      "status": "processing"
+    }
+  },
+  "expected": {
+    "use_for_universal_x": false,
+    "reason": "The installed route delegates to the legacy RunningHub query service and has no versioned Universal X result schema."
+  }
+}
