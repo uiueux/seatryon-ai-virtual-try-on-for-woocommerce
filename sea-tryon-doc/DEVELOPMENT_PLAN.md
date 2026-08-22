@@ -75,7 +75,7 @@
 8. 后台任务使用 WooCommerce Action Scheduler 公共 API，任务必须幂等。
 9. MVP 不创建自定义业务表；先以 options/meta/transients/临时文件实现，并通过并发与容量测试验证。
 10. 前端 UI 先满足无障碍和响应式，再添加非必要动画。
-11. 所有源字符串先写英文，并使用 `sea-tryon` text domain。
+11. 所有源字符串先写英文，并使用 `seatryon-ai-virtual-try-on-for-woocommerce` text domain。
 12. 每个里程碑只有在其质量门禁通过后才能进入下一阶段。
 
 ## 4. 总体依赖关系

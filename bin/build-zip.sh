@@ -18,8 +18,8 @@ for command_name in rsync zip; do
 done
 
 dist_dir="$root_dir/dist"
-stage_dir="$dist_dir/sea-tryon"
-zip_file="$dist_dir/sea-tryon-$version.zip"
+stage_dir="$dist_dir/seatryon-ai-virtual-try-on-for-woocommerce"
+zip_file="$dist_dir/seatryon-ai-virtual-try-on-for-woocommerce-$version.zip"
 
 mkdir -p "$dist_dir"
 rm -rf "$stage_dir"
@@ -37,7 +37,7 @@ bash "$root_dir/bin/audit-dist.sh" "$stage_dir"
 
 (
 	cd "$dist_dir"
-	zip -qr "$(basename "$zip_file")" sea-tryon
+	zip -qr "$(basename "$zip_file")" seatryon-ai-virtual-try-on-for-woocommerce
 )
 
 printf 'Created release package: %s\n' "$zip_file"

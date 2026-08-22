@@ -13,8 +13,8 @@ if ($Version -notmatch '^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$') {
 
 $Root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 $Dist = Join-Path $Root 'dist'
-$Stage = Join-Path $Dist 'sea-tryon'
-$Zip = Join-Path $Dist "sea-tryon-$Version.zip"
+$Stage = Join-Path $Dist 'seatryon-ai-virtual-try-on-for-woocommerce'
+$Zip = Join-Path $Dist "seatryon-ai-virtual-try-on-for-woocommerce-$Version.zip"
 $Checksum = "$Zip.sha256"
 
 $ExcludedDirectories = @(
@@ -139,7 +139,7 @@ try {
 		$fixedTime = [DateTimeOffset]::new(2026, 8, 9, 0, 0, 0, [TimeSpan]::Zero)
 		foreach ($file in Get-ChildItem -LiteralPath $Stage -File -Recurse | Sort-Object FullName) {
 			$relative = $file.FullName.Substring($Stage.Length + 1).Replace('\', '/')
-			$entry = $archive.CreateEntry("sea-tryon/$relative", [System.IO.Compression.CompressionLevel]::Optimal)
+			$entry = $archive.CreateEntry("seatryon-ai-virtual-try-on-for-woocommerce/$relative", [System.IO.Compression.CompressionLevel]::Optimal)
 			$entry.LastWriteTime = $fixedTime
 			$input = [System.IO.File]::OpenRead($file.FullName)
 			$output = $entry.Open()

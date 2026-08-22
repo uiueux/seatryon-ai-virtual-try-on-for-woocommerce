@@ -110,7 +110,7 @@ final class TriggerRenderer {
 			$label = $default_label;
 		}
 
-		$classes = array( 'seatryon-ai-virtual-try-on-for-woocommerce', 'sea-tryon-trigger' );
+		$classes = array( 'sea-tryon', 'sea-tryon-trigger' );
 
 		/**
 		 * Filters non-security presentation classes on the trigger wrapper.
