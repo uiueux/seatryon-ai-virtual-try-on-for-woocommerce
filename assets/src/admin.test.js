@@ -109,8 +109,10 @@ describe( 'SeaAI connection test', () => {
 			ajaxUrl: 'https://shop.example/wp-admin/admin-ajax.php',
 			action: 'sea_tryon_test_seaai_connection',
 			nonce: 'test-nonce',
+			getKeyUrl: 'https://theminitech.net/profile/',
 			messages: {
 				button: 'Test connection',
+				getKey: 'Get a key for free',
 				testing: 'Testing connection…',
 				failed: 'Connection failed.',
 			},
@@ -124,6 +126,19 @@ describe( 'SeaAI connection test', () => {
 
 		initializeSeaAIConnectionTests();
 		initializeSeaAIConnectionTests();
+
+		const getKeyLink = document.querySelector(
+			'.sea-tryon-seaai-key-link'
+		);
+		expect( getKeyLink ).not.toBeNull();
+		expect( getKeyLink.href ).toBe( 'https://theminitech.net/profile/' );
+		expect( getKeyLink.target ).toBe( '_blank' );
+		expect( getKeyLink.rel ).toBe( 'noopener noreferrer' );
+		expect(
+			getKeyLink.nextElementSibling.classList.contains(
+				'sea-tryon-seaai-test'
+			)
+		).toBe( true );
 
 		const button = document.querySelector(
 			'.sea-tryon-seaai-test__button'

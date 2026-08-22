@@ -19,6 +19,8 @@ final class SettingsPage {
 
 	public const SECTION_ID = 'sea_tryon';
 
+	private const SEAAI_PROFILE_URL = 'https://theminitech.net/profile/';
+
 	/**
 	 * Typed settings access.
 	 *
@@ -380,11 +382,13 @@ final class SettingsPage {
 			'sea-tryon-admin',
 			'sea_tryon_seaai_connection',
 			array(
-				'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-				'action'   => SeaAIConnectionController::AJAX_ACTION,
-				'nonce'    => wp_create_nonce( SeaAIConnectionController::NONCE_ACTION ),
-				'messages' => array(
+				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
+				'action'    => SeaAIConnectionController::AJAX_ACTION,
+				'nonce'     => wp_create_nonce( SeaAIConnectionController::NONCE_ACTION ),
+				'getKeyUrl' => self::SEAAI_PROFILE_URL,
+				'messages'  => array(
 					'button'  => __( 'Test connection', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
+					'getKey'  => __( 'Get a key for free', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
 					'testing' => __( 'Testing connection…', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
 					'failed'  => __( 'The connection test failed. Please try again.', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
 				),

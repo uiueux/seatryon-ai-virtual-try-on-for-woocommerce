@@ -35,7 +35,7 @@ The plugin does not intentionally send customer names, email addresses, user IDs
 
 === SeaAI Universal X gateway ===
 
-When SeaAI is selected, the plugin sends the same two images and the generation prompt to the configured SeaAI API root. The default gateway is `https://theminitech.net/wp-json/seaai/v1`; the store owner may configure another HTTPS SeaAI gateway. The images are uploaded for the generation request, and the generated result is downloaded from that gateway. The configured SeaAI API key is sent in an authorization header when the store owner tests the connection and when a generation request runs. Review TheMiniTech's [Terms of Service](https://theminitech.net/zh/terms-of-service/) and [Privacy Policy](https://theminitech.com/privacy-policy/) before using this gateway.
+When SeaAI is selected, the plugin sends the same two images and the generation prompt to the configured SeaAI API root. The default gateway is `https://theminitech.net/wp-json/seaai/v1`; the store owner may configure another HTTPS SeaAI gateway. The images are uploaded for the generation request, and the generated result is downloaded from that gateway. The configured SeaAI API key is sent in an authorization header when the store owner tests the connection and when a generation request runs. Review TheMiniTech's [Terms of Service](https://theminitech.net/terms-of-service-en/) and [Privacy Policy](https://theminitech.com/privacy-policy/) before using this gateway.
 
 External providers control their own processing, retention, hosting locations, and policies. Store owners are responsible for obtaining any required consent, reviewing the linked provider terms and privacy policy, and updating their site's privacy notice.
 

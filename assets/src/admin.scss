@@ -47,6 +47,12 @@
 	display: block;
 }
 
+.sea-tryon-seaai-key-link {
+	display: inline-block;
+	margin-left: 8px;
+	vertical-align: middle;
+}
+
 .sea-tryon-seaai-test {
 	display: inline-flex;
 	align-items: center;
@@ -86,6 +92,12 @@
 
 	.sea-tryon-product-image-field {
 		width: 100%;
+	}
+
+	.sea-tryon-seaai-key-link {
+		display: inline-block;
+		margin-left: 0;
+		margin-top: 8px;
 	}
 
 	.sea-tryon-seaai-test {

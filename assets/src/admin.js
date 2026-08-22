@@ -118,6 +118,15 @@ export function initializeSeaAIConnectionTests() {
 
 		keyInput.dataset.seaTryOnTestInitialized = 'true';
 
+		const getKeyLink = document.createElement( 'a' );
+		getKeyLink.className = 'button sea-tryon-seaai-key-link';
+		getKeyLink.href =
+			config.getKeyUrl || 'https://theminitech.net/profile/';
+		getKeyLink.target = '_blank';
+		getKeyLink.rel = 'noopener noreferrer';
+		getKeyLink.textContent =
+			config.messages?.getKey || 'Get a key for free';
+
 		const component = document.createElement( 'span' );
 		component.className = 'sea-tryon-seaai-test';
 		component.dataset.seaTryOnSeaaiTest = 'true';
@@ -137,7 +146,8 @@ export function initializeSeaAIConnectionTests() {
 		status.setAttribute( 'aria-live', 'polite' );
 
 		component.append( button, spinner );
-		keyInput.insertAdjacentElement( 'afterend', component );
+		keyInput.insertAdjacentElement( 'afterend', getKeyLink );
+		getKeyLink.insertAdjacentElement( 'afterend', component );
 		component.insertAdjacentElement( 'afterend', status );
 
 		const describedBy = keyInput.getAttribute( 'aria-describedby' );
