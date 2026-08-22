@@ -2,6 +2,13 @@
 
 SeaTryon – AI Virtual Try-On for WooCommerce lets shoppers combine an uploaded person or room image with a WooCommerce product image. It supports clothing, jewelry, glasses, wigs, furniture, and general product-placement previews.
 
+## Free WordPress plugin
+
+SeaTryon is a free WordPress plugin for WooCommerce. It requires a WordPress site with WooCommerce installed and activated.
+
+- **Try it online:** [SeaTryon demo](https://seatheme.net/sea-tryon/) (no login required; visitors can try it up to three times).
+- **Installation and configuration guide:** [SeaTryon documentation](https://seatheme.net/sea-tryon/seatryon-docs.html).
+
 ## Project status
 
 Version `1.1.0` uses the provider-agnostic WordPress AI Client. The automated implementation gates pass; live connector and final compatibility evidence should still be completed in staging before broad deployment.
@@ -66,7 +73,7 @@ The release archive is assembled from an explicit deny list in `.distignore` and
 bash bin/build-zip.sh 1.1.0
 ```
 
-The command requires Bash, `rsync`, and `zip`. It writes `dist/sea-tryon-<version>.zip`. Internal documents, tests, fixtures, development dependencies, source maps, and likely credential files are excluded. The CI release workflow repeats the audit against the finished ZIP.
+The command requires Bash, `rsync`, and `zip`. It writes `dist/seatryon-ai-virtual-try-on-for-woocommerce-<version>.zip`. Internal documents, tests, fixtures, development dependencies, source maps, and likely credential files are excluded. The CI release workflow repeats the audit against the finished ZIP.
 
 ## Privacy model
 
