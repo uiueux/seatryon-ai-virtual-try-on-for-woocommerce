@@ -158,18 +158,6 @@ final class SettingsPage {
 				true
 			),
 			array(
-				'title'     => __( 'SeaAI quality', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
-				'id'        => SettingsRepository::OPTION_SEAAI_QUALITY,
-				'type'      => 'select',
-				'default'   => 'low',
-				'row_class' => 'sea-tryon-provider-seaai',
-				'options'   => array(
-					'low'    => __( 'Low', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
-					'medium' => __( 'Medium', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
-					'high'   => __( 'High', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
-				),
-			),
-			array(
 				'title'   => __( 'Allow guests', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
 				'desc'    => __( 'Allow visitors to generate previews without signing in.', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
 				'id'      => SettingsRepository::OPTION_ALLOW_GUESTS,

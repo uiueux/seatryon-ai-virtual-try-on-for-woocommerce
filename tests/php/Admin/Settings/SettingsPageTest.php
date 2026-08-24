@@ -39,7 +39,7 @@ namespace SeaTryOn\Tests\Admin\Settings {
 			self::assertArrayNotHasKey( 'sea_tryon_openai_quality', $fields );
 			self::assertSame( SettingsRepository::DEFAULT_SEAAI_BASE_URL, $fields[ SettingsRepository::OPTION_SEAAI_BASE_URL ]['default'] );
 			self::assertSame( SettingsRepository::DEFAULT_SEAAI_BASE_URL, $fields[ SettingsRepository::OPTION_SEAAI_BASE_URL ]['placeholder'] );
-			self::assertSame( 'low', $fields[ SettingsRepository::OPTION_SEAAI_QUALITY ]['default'] );
+			self::assertArrayNotHasKey( SettingsRepository::OPTION_SEAAI_QUALITY, $fields );
 			self::assertSame( 'no', $fields[ SettingsRepository::OPTION_ALLOW_GUESTS ]['default'] );
 			self::assertSame( '3', $fields[ SettingsRepository::OPTION_LOGGED_IN_DAILY_LIMIT ]['default'] );
 			self::assertSame( '3', $fields[ SettingsRepository::OPTION_GUEST_DAILY_LIMIT ]['default'] );
