@@ -25,6 +25,10 @@ Version `1.1.0` uses the provider-agnostic WordPress AI Client. The automated im
 
 The extension uses the WooCommerce Classic Product Editor for product-level settings. The storefront integration supports classic templates, block themes, and Site Editor single-product templates through a public WooCommerce hook with a dynamic block fallback. Local validation passed with WooCommerce 10.9.4, Storefront 4.6.2, Twenty Twenty-Five, and a third-party classic theme.
 
+
+## Installation 
+You can directly download the production version plugin from the [WordPress official website](https://wordpress.org/plugins/seatryon-ai-virtual-try-on-for-woocommerce/). The current Git repository only contains the development version and does not include the directly installable WordPress plugin files.
+
 ## Merchant setup
 
 1. Open **WooCommerce > Settings > Products > Virtual Try-On**.
