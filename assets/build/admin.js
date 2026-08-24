@@ -1,1 +1,279 @@
-(()=>{"use strict";function e(){document.querySelectorAll("[data-sea-tryon-admin]").forEach(e=>{e.classList.add("is-ready")}),document.querySelectorAll("[data-sea-tryon-product-image]").forEach(e=>{if("true"===e.dataset.seaTryOnInitialized)return;const t=e.querySelector('input[type="hidden"]'),a=e.querySelector("[data-sea-tryon-image-preview]"),n=e.querySelector("[data-sea-tryon-image-select]"),s=e.querySelector("[data-sea-tryon-image-remove]");if(!(t&&a&&n&&s))return;let i;e.dataset.seaTryOnInitialized="true",n.addEventListener("click",()=>{window.wp?.media&&(i||(i=window.wp.media({title:e.dataset.mediaTitle||"Select a Try-On Product Image",button:{text:e.dataset.mediaButton||"Use this image"},library:{type:"image"},multiple:!1}),i.on("select",()=>{const r=i.state().get("selection").first(),o=r?.get("id"),c=r?.get("sizes")||{},d=c.thumbnail?.url||r?.get("url");if(!o||!d)return;t.value=String(o),a.replaceChildren();const l=document.createElement("img");l.src=d,l.alt="",l.className="sea-tryon-product-image__thumbnail",a.appendChild(l),n.textContent=e.dataset.changeLabel||"Change image",s.hidden=!1})),i.open())}),s.addEventListener("click",()=>{t.value="",a.replaceChildren(),n.textContent=e.dataset.selectLabel||"Select image",s.hidden=!0})}),document.querySelectorAll('[data-sea-tryon-seaai-key="true"]').forEach(e=>{if("true"===e.dataset.seaTryOnTestInitialized)return;const t=window.sea_tryon_seaai_connection,a=document.getElementById("sea_tryon_seaai_base_url");if(!t?.ajaxUrl||!t?.nonce||!a)return;e.dataset.seaTryOnTestInitialized="true";const n=document.createElement("a");n.className="button sea-tryon-seaai-key-link",n.href=t.getKeyUrl||"https://theminitech.net/profile/",n.target="_blank",n.rel="noopener noreferrer",n.textContent=t.messages?.getKey||"Get a key for free";const s=document.createElement("span");s.className="sea-tryon-seaai-test",s.dataset.seaTryOnSeaaiTest="true";const i=document.createElement("button");i.type="button",i.className="button sea-tryon-seaai-test__button",i.textContent=t.messages?.button||"Test connection";const r=document.createElement("span");r.className="spinner sea-tryon-seaai-test__spinner",r.setAttribute("aria-hidden","true");const o=document.createElement("p");o.className="description sea-tryon-seaai-test__status",o.id="sea-tryon-seaai-test-status",o.setAttribute("aria-live","polite"),s.append(i,r),e.insertAdjacentElement("afterend",n),n.insertAdjacentElement("afterend",s),s.insertAdjacentElement("afterend",o);const c=e.getAttribute("aria-describedby");e.setAttribute("aria-describedby",[c,o.id].filter(Boolean).join(" ")),i.addEventListener("click",async()=>{i.disabled=!0,s.classList.add("is-testing"),o.dataset.state="testing",o.textContent=t.messages?.testing||"Testing connection…";const n=new URLSearchParams({action:t.action,nonce:t.nonce,base_url:a.value,api_key:e.value});try{const e=await window.fetch(t.ajaxUrl,{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/x-www-form-urlencoded; charset=UTF-8"},body:n.toString()}),a=await e.json(),s=!0===a?.success;o.dataset.state=s?"success":"error",o.textContent=a?.data?.message||t.messages?.failed||"The connection test failed. Please try again."}catch{o.dataset.state="error",o.textContent=t.messages?.failed||"The connection test failed. Please try again."}finally{i.disabled=!1,s.classList.remove("is-testing")}})})}"loading"===document.readyState?document.addEventListener("DOMContentLoaded",e,{once:!0}):e()})();
+/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ({
+
+/***/ "./assets/src/admin.scss"
+/*!*******************************!*\
+  !*** ./assets/src/admin.scss ***!
+  \*******************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+// extracted by mini-css-extract-plugin
+
+
+/***/ }
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	const __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		const cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		const module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		if (!(moduleId in __webpack_modules__)) {
+/******/ 			delete __webpack_module_cache__[moduleId];
+/******/ 			const e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 			e.code = 'MODULE_NOT_FOUND';
+/******/ 			throw e;
+/******/ 		}
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter/value functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			if(Array.isArray(definition)) {
+/******/ 				var i = 0;
+/******/ 				while(i < definition.length) {
+/******/ 					var key = definition[i++];
+/******/ 					var binding = definition[i++];
+/******/ 					if(!__webpack_require__.o(exports, key)) {
+/******/ 						if(binding === 0) {
+/******/ 							Object.defineProperty(exports, key, { enumerable: true, value: definition[i++] });
+/******/ 						} else {
+/******/ 							Object.defineProperty(exports, key, { enumerable: true, get: binding });
+/******/ 						}
+/******/ 					} else if(binding === 0) { i++; }
+/******/ 				}
+/******/ 			} else {
+/******/ 				for(var key in definition) {
+/******/ 					if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 						Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 					}
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.hasOwn(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+let __webpack_exports__ = {};
+// This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
+(() => {
+/*!*****************************!*\
+  !*** ./assets/src/admin.js ***!
+  \*****************************/
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   initializeAdminRoots: () => (/* binding */ initializeAdminRoots),
+/* harmony export */   initializeProductImageSelectors: () => (/* binding */ initializeProductImageSelectors),
+/* harmony export */   initializeSeaAIConnectionTests: () => (/* binding */ initializeSeaAIConnectionTests)
+/* harmony export */ });
+/* harmony import */ var _admin_scss__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./admin.scss */ "./assets/src/admin.scss");
+
+const ADMIN_ROOT_SELECTOR = '[data-sea-tryon-admin]';
+const PRODUCT_IMAGE_SELECTOR = '[data-sea-tryon-product-image]';
+const SEAAI_KEY_SELECTOR = '[data-sea-tryon-seaai-key="true"]';
+
+/**
+ * Initialize Sea Try-On settings roots without assuming a specific admin screen.
+ *
+ * @return {void}
+ */
+function initializeAdminRoots() {
+  document.querySelectorAll(ADMIN_ROOT_SELECTOR).forEach(root => {
+    root.classList.add('is-ready');
+  });
+}
+
+/**
+ * Initialize optional product-image media selectors in the classic editor.
+ *
+ * @return {void}
+ */
+function initializeProductImageSelectors() {
+  document.querySelectorAll(PRODUCT_IMAGE_SELECTOR).forEach(root => {
+    if (root.dataset.seaTryOnInitialized === 'true') {
+      return;
+    }
+    const input = root.querySelector('input[type="hidden"]');
+    const preview = root.querySelector('[data-sea-tryon-image-preview]');
+    const selectButton = root.querySelector('[data-sea-tryon-image-select]');
+    const removeButton = root.querySelector('[data-sea-tryon-image-remove]');
+    if (!input || !preview || !selectButton || !removeButton) {
+      return;
+    }
+    root.dataset.seaTryOnInitialized = 'true';
+    let mediaFrame;
+    selectButton.addEventListener('click', () => {
+      if (!window.wp?.media) {
+        return;
+      }
+      if (!mediaFrame) {
+        mediaFrame = window.wp.media({
+          title: root.dataset.mediaTitle || 'Select a Try-On Product Image',
+          button: {
+            text: root.dataset.mediaButton || 'Use this image'
+          },
+          library: {
+            type: 'image'
+          },
+          multiple: false
+        });
+        mediaFrame.on('select', () => {
+          const attachment = mediaFrame.state().get('selection').first();
+          const id = attachment?.get('id');
+          const sizes = attachment?.get('sizes') || {};
+          const url = sizes.thumbnail?.url || attachment?.get('url');
+          if (!id || !url) {
+            return;
+          }
+          input.value = String(id);
+          preview.replaceChildren();
+          const image = document.createElement('img');
+          image.src = url;
+          image.alt = '';
+          image.className = 'sea-tryon-product-image__thumbnail';
+          preview.appendChild(image);
+          selectButton.textContent = root.dataset.changeLabel || 'Change image';
+          removeButton.hidden = false;
+        });
+      }
+      mediaFrame.open();
+    });
+    removeButton.addEventListener('click', () => {
+      input.value = '';
+      preview.replaceChildren();
+      selectButton.textContent = root.dataset.selectLabel || 'Select image';
+      removeButton.hidden = true;
+    });
+  });
+}
+
+/**
+ * Add a non-generating SeaAI URL/key test beside the native password field.
+ *
+ * @return {void}
+ */
+function initializeSeaAIConnectionTests() {
+  document.querySelectorAll(SEAAI_KEY_SELECTOR).forEach(keyInput => {
+    if (keyInput.dataset.seaTryOnTestInitialized === 'true') {
+      return;
+    }
+    const config = window.sea_tryon_seaai_connection;
+    const urlInput = document.getElementById('sea_tryon_seaai_base_url');
+    if (!config?.ajaxUrl || !config?.nonce || !urlInput) {
+      return;
+    }
+    keyInput.dataset.seaTryOnTestInitialized = 'true';
+    const getKeyLink = document.createElement('a');
+    getKeyLink.className = 'button sea-tryon-seaai-key-link';
+    getKeyLink.href = config.getKeyUrl || 'https://theminitech.net/profile/';
+    getKeyLink.target = '_blank';
+    getKeyLink.rel = 'noopener noreferrer';
+    getKeyLink.textContent = config.messages?.getKey || 'Get a key for free';
+    const component = document.createElement('span');
+    component.className = 'sea-tryon-seaai-test';
+    component.dataset.seaTryOnSeaaiTest = 'true';
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'button sea-tryon-seaai-test__button';
+    button.textContent = config.messages?.button || 'Test connection';
+    const spinner = document.createElement('span');
+    spinner.className = 'spinner sea-tryon-seaai-test__spinner';
+    spinner.setAttribute('aria-hidden', 'true');
+    const status = document.createElement('p');
+    status.className = 'description sea-tryon-seaai-test__status';
+    status.id = 'sea-tryon-seaai-test-status';
+    status.setAttribute('aria-live', 'polite');
+    component.append(button, spinner);
+    keyInput.insertAdjacentElement('afterend', getKeyLink);
+    getKeyLink.insertAdjacentElement('afterend', component);
+    component.insertAdjacentElement('afterend', status);
+    const describedBy = keyInput.getAttribute('aria-describedby');
+    keyInput.setAttribute('aria-describedby', [describedBy, status.id].filter(Boolean).join(' '));
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      component.classList.add('is-testing');
+      status.dataset.state = 'testing';
+      status.textContent = config.messages?.testing || 'Testing connection…';
+      const body = new URLSearchParams({
+        action: config.action,
+        nonce: config.nonce,
+        base_url: urlInput.value,
+        api_key: keyInput.value
+      });
+      try {
+        const response = await window.fetch(config.ajaxUrl, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+          },
+          body: body.toString()
+        });
+        const payload = await response.json();
+        const success = payload?.success === true;
+        status.dataset.state = success ? 'success' : 'error';
+        status.textContent = payload?.data?.message || config.messages?.failed || 'The connection test failed. Please try again.';
+      } catch {
+        status.dataset.state = 'error';
+        status.textContent = config.messages?.failed || 'The connection test failed. Please try again.';
+      } finally {
+        button.disabled = false;
+        component.classList.remove('is-testing');
+      }
+    });
+  });
+}
+function initializeAdmin() {
+  initializeAdminRoots();
+  initializeProductImageSelectors();
+  initializeSeaAIConnectionTests();
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeAdmin, {
+    once: true
+  });
+} else {
+  initializeAdmin();
+}
+})();
+
+/******/ })()
+;
+//# sourceMappingURL=admin.js.map

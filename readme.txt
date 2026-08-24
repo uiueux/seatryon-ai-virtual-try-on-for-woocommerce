@@ -17,6 +17,12 @@ The plugin supports clothing, jewelry, glasses, wigs, furniture, and general pro
 
 Version 1.1.0 uses the provider-agnostic WordPress AI Client introduced in WordPress 7.0. Validate the selected connector and complete generation flow in a staging environment before enabling it for customers.
 
+You can choose a demo on the [demo website](https://seatheme.net/sea-tryon/) to try it out, with 3 free trials without logging in. 
+
+== Video Guide ==
+
+https://youtu.be/WDDXnp4ejRo
+
 = Privacy =
 
 When generation is enabled, a customer's uploaded image and the selected product image are sent to the image provider configured by the store owner. The plugin does not send customer names, email addresses, billing details, shipping details, or order information.
@@ -28,6 +34,8 @@ Input images, generated images, and temporary job data are stored outside the Wo
 SeaTryon relies on an external image-generation service for each virtual try-on or product-placement preview. The store owner must configure either a WordPress AI Client connector or the SeaAI Universal X gateway. No image is transmitted until Virtual Try-On is enabled and a shopper submits a generation request after selecting an image.
 
 === WordPress AI Client and the selected connector ===
+
+WordPress AI is currently not recommended for use, because I tested Openai and found that it does not support the latest Image2 model or multi-image mode, which means it does not support the try-on feature. I do not currently have the conditions to test Gemini. If you wish to use Gemini and would like my assistance, please contact me via seatheme.net@gmail.com
 
 The plugin passes the shopper's uploaded person or room image, the current WooCommerce product image, and the generation prompt (including the merchant's product-specific instruction) to the provider selected under WordPress Settings > Connectors. WordPress core manages the connector credentials; this plugin does not store or expose them. The selected connector may transmit this data to its own AI service. If the connector uses OpenAI, review the [OpenAI Services Agreement](https://openai.com/policies/services-agreement/) and [OpenAI Privacy Policy](https://openai.com/policies/privacy-policy/). If another connector is selected, the store owner must review that provider's current terms and privacy policy before enabling generation.
 
@@ -89,9 +97,9 @@ No. Uploaded and generated images use private temporary storage and are not crea
 
 Guest generation is disabled by default. The store owner can enable it and set separate daily limits for guests and signed-in customers. WordPress administrators are not limited.
 
-= Which image providers are supported? =
+= Which image providers are supported? What is the cost per generation? =
 
-The WordPress AI Client and the SeaAI Universal X gateway are supported. For WordPress AI, configure a site connector that supports image editing under Settings > Connectors. Only one provider is active at a time.
+The WordPress AI Client and the SeaAI Universal X gateway are supported. For WordPress AI, configure a site connector that supports image editing under Settings > Connectors. Only one provider is active at a time. (WordPress AI is currently not recommended for use, because I tested OPENAI and found that it does not support the latest Image 2 model or multi-image mode, which means it does not support the try-on feature. I do not currently have the conditions to test Gemini. If you wish to use Gemini and would like my assistance, please contact me seatheme.net@gmail.com). The cost per generation is 30 credits for SeaAI Universal X, which is equivalent to 0.05 USD (based on the $9 for 5,000 credits package). Please note that this price is for reference only and is not fixed; it may fluctuate based on cost calculations.
 
 == Changelog ==
 

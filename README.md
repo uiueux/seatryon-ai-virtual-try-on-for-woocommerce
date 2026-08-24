@@ -1,6 +1,8 @@
 # SeaTryon – AI Virtual Try-On for WooCommerce
 
-SeaTryon – AI Virtual Try-On for WooCommerce lets shoppers combine an uploaded person or room image with a WooCommerce product image. It supports clothing, jewelry, glasses, wigs, furniture, and general product-placement previews.
+SeaTryon – AI Virtual Try-On for WooCommerce lets shoppers combine an uploaded person or room image with a WooCommerce product image. It supports clothing, jewelry, glasses, wigs, furniture, and general product-placement previews. You can choose a demo on the [demo website](https://seatheme.net/sea-tryon/) to try it out, with 3 free trials without logging in. 
+
+https://youtu.be/WDDXnp4ejRo
 
 ## Free WordPress plugin
 

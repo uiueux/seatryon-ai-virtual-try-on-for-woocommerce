@@ -1,1 +1,1265 @@
-(()=>{"use strict";const e="[data-sea-tryon-root]",t="data-sea-tryon-ready",o=10485760,r=["image/jpeg","image/png","image/webp"],a=new WeakMap,n={invalidType:window.wp?.i18n?.__("Please upload a valid JPEG, PNG, or WebP image.","seatryon-ai-virtual-try-on-for-woocommerce")||"Please upload a valid JPEG, PNG, or WebP image.",fileTooLarge:window.wp?.i18n?.__("This image is too large. Please choose an image under 10 MB.","seatryon-ai-virtual-try-on-for-woocommerce")||"This image is too large. Please choose an image under 10 MB.",imageSelected:window.wp?.i18n?.__("Image selected. Review the consent notice to continue.","seatryon-ai-virtual-try-on-for-woocommerce")||"Image selected. Review the consent notice to continue.",optimizing:window.wp?.i18n?.__("Optimizing your image…","seatryon-ai-virtual-try-on-for-woocommerce")||"Optimizing your image…",optimizationFailed:window.wp?.i18n?.__("We could not optimize this image. Please choose another image.","seatryon-ai-virtual-try-on-for-woocommerce")||"We could not optimize this image. Please choose another image.",variationChanged:window.wp?.i18n?.__("The selected variation changed. Please choose your image again.","seatryon-ai-virtual-try-on-for-woocommerce")||"The selected variation changed. Please choose your image again.",imageRemoved:window.wp?.i18n?.__("Image removed.","seatryon-ai-virtual-try-on-for-woocommerce")||"Image removed.",cameraRequesting:window.wp?.i18n?.__("Requesting camera access…","seatryon-ai-virtual-try-on-for-woocommerce")||"Requesting camera access…",cameraReady:window.wp?.i18n?.__("Camera ready. Position the photo and press Capture photo.","seatryon-ai-virtual-try-on-for-woocommerce")||"Camera ready. Position the photo and press Capture photo.",cameraUnsupported:window.wp?.i18n?.__("Camera capture is not supported in this browser. Please upload a photo instead.","seatryon-ai-virtual-try-on-for-woocommerce")||"Camera capture is not supported in this browser. Please upload a photo instead.",cameraPermissionDenied:window.wp?.i18n?.__("Camera access was blocked. Allow camera permission or upload a photo instead.","seatryon-ai-virtual-try-on-for-woocommerce")||"Camera access was blocked. Allow camera permission or upload a photo instead.",cameraFailed:window.wp?.i18n?.__("We could not access the camera. Please try again or upload a photo instead.","seatryon-ai-virtual-try-on-for-woocommerce")||"We could not access the camera. Please try again or upload a photo instead.",captureFailed:window.wp?.i18n?.__("We could not capture this photo. Please try again.","seatryon-ai-virtual-try-on-for-woocommerce")||"We could not capture this photo. Please try again.",submitting:window.wp?.i18n?.__("Uploading your image securely…","seatryon-ai-virtual-try-on-for-woocommerce")||"Uploading your image securely…",processing:window.wp?.i18n?.__("Generating your preview. This may take a moment…","seatryon-ai-virtual-try-on-for-woocommerce")||"Generating your preview. This may take a moment…",succeeded:window.wp?.i18n?.__("Your preview is ready.","seatryon-ai-virtual-try-on-for-woocommerce")||"Your preview is ready.",genericError:window.wp?.i18n?.__("We could not generate the preview. Please try again.","seatryon-ai-virtual-try-on-for-woocommerce")||"We could not generate the preview. Please try again."};function i(e){const t=window.SeaTryOnConfig;return t&&Number(t.productId)===Number(e.root.dataset.productId)?t:null}function d(e,t){return"logged-in"===e.authMode?{"X-WP-Nonce":e.nonce}:e.tokens?.[t]?{"X-Sea-TryOn-Token":e.tokens[t]}:{}}async function s(e,t){if("guest"!==e.authMode)return;const o=await window.fetch(e.guestTokenUrl,{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({product_id:Number(e.productId)}),signal:t}),r=await o.json().catch(()=>({}));if(!o.ok)throw new Error(r.message||n.genericError);e.tokens=r}async function c(e){const t=await e.json().catch(()=>({}));if(!e.ok){const e=new Error(t.message||n.genericError);throw e.code=t.code||"generation_failed",e}return t}function l(e){e.resultUrl&&(URL.revokeObjectURL(e.resultUrl),e.resultUrl=""),e.resultImage&&e.resultImage.removeAttribute("src"),e.download&&e.download.removeAttribute("href"),e.result&&(e.result.hidden=!0),e.zoom&&(e.zoom.disabled=!0)}function u(e,t){const o=t?.message||n.genericError;C(e.root,"failed"),g(e,""),e.error.textContent=o,e.error.hidden=!1,e.retry&&(e.retry.hidden=!1,e.retry.focus())}async function m(e,t,o){const a=await window.fetch(t.result_url,{credentials:"same-origin",headers:d(o,"result"),signal:e.controller.signal});a.ok||await c(a);const i=await a.blob();if(!r.includes(i.type))throw new Error(n.genericError);const s=e.resultJobId;l(e),e.resultUrl=URL.createObjectURL(i),e.resultJobId=t.id,e.resultImage.src=e.resultUrl,e.download.href=e.resultUrl,e.download.download=`virtual-try-on-${t.id}.${"image/jpeg"===i.type?"jpg":"png"}`,e.result.hidden=!1,C(e.root,"succeeded",n.succeeded),s&&s!==t.id&&p(e,s,!0)}async function y(e){const t=i(e);if(t&&"required"!==t.authMode&&e.uploadFile){e.controller?.abort(),e.controller=new AbortController,e.retry.hidden=!0,e.error.hidden=!0,e.error.textContent="",C(e.root,"submitting",n.submitting);try{await s(t,e.controller.signal);const o=new FormData;o.append("product_id",String(t.productId)),Number(e.root.dataset.variationId)>0&&o.append("variation_id",e.root.dataset.variationId),o.append("consent","true"),e.idempotencyKey||(e.idempotencyKey=function(){const e=new Uint8Array(24);return window.crypto.getRandomValues(e),Array.from(e,e=>e.toString(16).padStart(2,"0")).join("")}()),o.append("idempotency_key",e.idempotencyKey),o.append("image",e.uploadFile);const r=await window.fetch(`${t.restRoot}jobs`,{method:"POST",credentials:"same-origin",headers:d(t,"create"),body:o,signal:e.controller.signal}),a=await c(r);e.idempotencyKey="",e.jobId=a.id,C(e.root,"processing",n.processing),await async function(e,t,o){let r=Date.now(),a=2e3,i=t;for(;Date.now()-r<3e5;){if("succeeded"===i.status)return void await m(e,i,o);if("failed"===i.status||"expired"===i.status)throw new Error(i.error?.message||n.genericError);if(document.hidden){const t=Date.now();await new Promise((t,o)=>{const r=()=>{document.hidden||(n(),t())},a=()=>{n(),o(new DOMException("Aborted","AbortError"))},n=()=>{document.removeEventListener("visibilitychange",r),e.controller.signal.removeEventListener("abort",a)};document.addEventListener("visibilitychange",r),e.controller.signal.addEventListener("abort",a,{once:!0})}),r+=Date.now()-t}await new Promise(e=>window.setTimeout(e,a));const t=await window.fetch(`${o.restRoot}jobs/${encodeURIComponent(i.id)}`,{credentials:"same-origin",headers:d(o,"status"),signal:e.controller.signal});i=await c(t),a=Math.min(1e4,2*a)}throw new Error(n.genericError)}(e,a,t)}catch(t){"AbortError"!==t.name&&u(e,t)}}}async function p(e,t=e.jobId,o=!1){const r=i(e);if(r&&t)try{await s(r);const a=await window.fetch(`${r.restRoot}jobs/${encodeURIComponent(t)}`,{method:"DELETE",credentials:"same-origin",headers:d(r,"delete")});a.ok||await c(a),e.jobId===t&&(e.jobId=""),e.resultJobId===t&&(e.resultJobId="",l(e)),o||C(e.root,"idle","")}catch(t){o||u(e,t)}}function g(e,t){e.status.textContent=t}function w(e){const t="succeeded"===e.root.dataset.state;e.generate.disabled=!e.uploadFile||!e.consent.checked||e.busy||e.optimizing||t,e.file.disabled=e.busy||e.optimizing||t,e.cameraOpen&&(e.cameraOpen.disabled=e.busy||e.optimizing||e.cameraOpening||t),e.cameraCapture&&(e.cameraCapture.disabled=e.busy||e.cameraOpening||e.cameraCapturing),e.consent.disabled=e.busy||e.optimizing||t,e.remove&&(e.remove.disabled=e.busy||e.optimizing)}function h(e,t=""){b(e),++e.fileSelectionId,e.uploadFile=null,e.optimizing=!1,e.previewUrl&&(URL.revokeObjectURL(e.previewUrl),e.previewUrl=""),e.file.value="",e.fileName.textContent="",e.fileMeta&&(e.fileMeta.textContent=""),e.previewImage.removeAttribute("src"),e.preview.hidden=!0,e.root.dataset.hasFile="false",e.error.hidden=!0,e.error.textContent="",e.retry&&(e.retry.hidden=!0),w(e),t&&g(e,t)}let f=null;function v(e){e.root.hidden||(b(e),e.root.hidden=!0,function(){if(!f||!document.body)return;const e=document.documentElement,t=document.body,o=f;f=null,e.classList.remove("sea-tryon-modal-open"),t.classList.remove("sea-tryon-modal-open"),e.style.overflow=o.htmlOverflow,e.style.overscrollBehavior=o.htmlOverscrollBehavior,t.style.position=o.bodyPosition,t.style.top=o.bodyTop,t.style.left=o.bodyLeft,t.style.right=o.bodyRight,t.style.width=o.bodyWidth,t.style.boxSizing=o.bodyBoxSizing,t.style.overflow=o.bodyOverflow,t.style.overscrollBehavior=o.bodyOverscrollBehavior,t.style.paddingRight=o.bodyPaddingRight,e.style.scrollBehavior="auto",window.scrollTo(o.scrollX,o.scrollY),e.style.scrollBehavior=o.htmlScrollBehavior}(),e.trigger?.isConnected&&e.trigger.focus(),e.root.dispatchEvent(new CustomEvent("sea-tryon:closed",{bubbles:!0})))}function b(e,t=!1){e.camera&&(++e.cameraRequestId,e.cameraStream?.getTracks().forEach(e=>e.stop()),(e.cameraStream||e.cameraVideo.srcObject)&&e.cameraVideo.pause?.(),e.cameraStream=null,e.cameraOpening=!1,e.cameraCapturing=!1,e.cameraVideo.srcObject=null,e.camera.hidden=!0,e.sources.hidden=!1,w(e),t&&e.cameraOpen.isConnected&&e.cameraOpen.focus())}function S(e,t){b(e),g(e,""),e.error.textContent=t,e.error.hidden=!1}async function E(e,t){const a=++e.fileSelectionId;if(!t)return void h(e);let d,s="";if(r.includes(t.type)?t.size>Math.min(o,Number(i(e)?.maxUploadBytes)||o)&&(s=n.fileTooLarge):s=n.invalidType,s)return h(e),g(e,""),e.error.textContent=s,void(e.error.hidden=!1);e.uploadFile=null,e.optimizing=!0,e.root.dataset.hasFile="false",e.error.hidden=!0,e.error.textContent="",g(e,n.optimizing),w(e);try{d=await async function(e){const t=await function(e){return new Promise((t,o)=>{const r=URL.createObjectURL(e),a=new window.Image;a.onload=()=>{URL.revokeObjectURL(r),t(a)},a.onerror=()=>{URL.revokeObjectURL(r),o(new Error(n.optimizationFailed))},a.src=r})}(e),o=t.naturalWidth||t.width,r=t.naturalHeight||t.height;if(o<1||r<1)throw new Error(n.optimizationFailed);const a=Math.min(o,2e3),i=Math.max(1,Math.round(r*(a/o))),d=document.createElement("canvas");d.width=a,d.height=i;const s=d.getContext("2d");if(!s)throw new Error(n.optimizationFailed);s.imageSmoothingEnabled=!0,s.imageSmoothingQuality="high",s.fillStyle="#fff",s.fillRect(0,0,a,i),s.drawImage(t,0,0,a,i);const c=await new Promise((e,t)=>{d.toBlob(o=>{o?e(o):t(new Error(n.optimizationFailed))},"image/jpeg",.9)}),l=e.name.replace(/\.[^/.]+$/,"")||"try-on-photo";return d.width=1,d.height=1,new File([c],`${l}.jpg`,{type:"image/jpeg",lastModified:e.lastModified})}(t)}catch(t){if(a!==e.fileSelectionId)return;const o=t?.message||n.optimizationFailed;return h(e),g(e,""),e.error.textContent=o,void(e.error.hidden=!1)}if(a!==e.fileSelectionId)return;const c=Math.min(o,Number(i(e)?.maxUploadBytes)||o);if(d.size>c)return h(e),g(e,""),e.error.textContent=n.fileTooLarge,void(e.error.hidden=!1);e.previewUrl&&URL.revokeObjectURL(e.previewUrl),e.uploadFile=d,e.optimizing=!1,e.previewUrl=URL.createObjectURL(d),e.previewImage.src=e.previewUrl,e.fileName.textContent=d.name,e.fileMeta&&(e.fileMeta.textContent=function(e){return`${(e.type.split("/")[1]||"image").replace("jpeg","JPG").replace("png","PNG").replace("webp","WebP")} · ${(e.size/1048576).toFixed(1)} MB`}(d)),e.preview.hidden=!1,e.root.dataset.hasFile="true",e.error.hidden=!0,e.error.textContent="",e.retry.hidden=!0,C(e.root,"idle"),g(e,n.imageSelected),w(e)}function I(e,t){const o=a.get(e);if(!o)return;const r=String(t||"0");if(o.root.dataset.variationId===r)return;o.root.dataset.variationId=r,o.controller?.abort();const i=[...new Set([o.jobId,o.resultJobId].filter(Boolean))];for(const e of i)p(o,e,!0);o.jobId="",o.resultJobId="",o.idempotencyKey="",l(o),h(o,n.variationChanged),o.root.dispatchEvent(new CustomEvent("sea-tryon:variation-invalidated",{bubbles:!0,detail:{variationId:r}}))}function C(e,t,o=""){const r=a.get(e);r&&(r.busy="submitting"===t||"processing"===t,r.root.dataset.state=t,r.dialog.setAttribute("aria-busy",r.busy?"true":"false"),r.progress&&r.progress.setAttribute("aria-hidden",r.busy?"false":"true"),w(r),o&&g(r,o),r.root.dispatchEvent(new CustomEvent("sea-tryon:state-changed",{bubbles:!0,detail:{state:t}})))}function _(e){if(e.hasAttribute(t))return;const o={root:e,dialog:e.querySelector('[role="dialog"]'),backdrop:e.querySelector("[data-sea-tryon-backdrop]"),file:e.querySelector("[data-sea-tryon-file]"),sources:e.querySelector("[data-sea-tryon-sources]"),cameraOpen:e.querySelector("[data-sea-tryon-camera-open]"),camera:e.querySelector("[data-sea-tryon-camera]"),cameraVideo:e.querySelector("[data-sea-tryon-camera-video]"),cameraCapture:e.querySelector("[data-sea-tryon-camera-capture]"),cameraCancel:e.querySelector("[data-sea-tryon-camera-cancel]"),preview:e.querySelector("[data-sea-tryon-preview]"),previewImage:e.querySelector("[data-sea-tryon-preview-image]"),fileName:e.querySelector("[data-sea-tryon-file-name]"),fileMeta:e.querySelector("[data-sea-tryon-file-meta]"),remove:e.querySelector("[data-sea-tryon-remove]"),error:e.querySelector("[data-sea-tryon-upload-error]"),consent:e.querySelector("[data-sea-tryon-consent]"),generate:e.querySelector("[data-sea-tryon-generate]"),status:e.querySelector("[data-sea-tryon-status]"),progress:e.querySelector("[data-sea-tryon-progress]"),login:e.querySelector("[data-sea-tryon-login]"),loginLink:e.querySelector("[data-sea-tryon-login-link]"),workflow:e.querySelector("[data-sea-tryon-workflow]"),retry:e.querySelector("[data-sea-tryon-error-retry]"),result:e.querySelector("[data-sea-tryon-result]"),resultImage:e.querySelector("[data-sea-tryon-result-image]"),zoom:e.querySelector("[data-sea-tryon-zoom]"),download:e.querySelector("[data-sea-tryon-download]"),previewUrl:"",resultUrl:"",jobId:"",resultJobId:"",idempotencyKey:"",uploadFile:null,fileSelectionId:0,optimizing:!1,cameraStream:null,cameraOpening:!1,cameraCapturing:!1,cameraRequestId:0,controller:null,trigger:null,busy:!1};if([o.dialog,o.backdrop,o.file,o.sources,o.cameraOpen,o.camera,o.cameraVideo,o.cameraCapture,o.cameraCancel,o.preview,o.previewImage,o.fileName,o.remove,o.error,o.consent,o.generate,o.status,o.login,o.loginLink,o.workflow,o.retry,o.result,o.resultImage,o.zoom,o.download].some(e=>null===e))return;a.set(e,o),e.setAttribute(t,"true"),e.dataset.state="idle",e.dataset.variationId="0",e.dataset.hasFile="false";const r=i(o);"required"===r?.authMode&&(o.login.hidden=!1,o.loginLink.href=r.loginUrl,o.workflow.hidden=!0),e.addEventListener("keydown",e=>function(e,t){if("Escape"===e.key)return e.preventDefault(),void v(t);if("Tab"!==e.key)return;const o=(r=t.dialog,Array.from(r.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')).filter(e=>!e.closest("[hidden]")));var r;if(0===o.length)return e.preventDefault(),void t.dialog.focus();const a=o[0],n=o[o.length-1],i=t.dialog.ownerDocument.activeElement;!e.shiftKey||i!==a&&i!==t.dialog?e.shiftKey||i!==n||(e.preventDefault(),a.focus()):(e.preventDefault(),n.focus())}(e,o)),e.addEventListener("click",e=>{(e.target.closest("[data-sea-tryon-close]")||e.target===o.backdrop)&&v(o)}),o.file.addEventListener("change",()=>async function(e){const[t]=e.file.files||[];await E(e,t)}(o)),o.cameraOpen.addEventListener("click",()=>async function(e){if(e.busy||e.optimizing||e.cameraOpening)return;if(!navigator.mediaDevices?.getUserMedia)return void S(e,n.cameraUnsupported);const t=++e.cameraRequestId;e.cameraOpening=!0,e.error.hidden=!0,e.error.textContent="",g(e,n.cameraRequesting),w(e);try{const o="scene"===e.root.dataset.experienceMode?"environment":"user",r=await navigator.mediaDevices.getUserMedia({audio:!1,video:{facingMode:{ideal:o},width:{ideal:1920},height:{ideal:1080}}});if(t!==e.cameraRequestId||e.root.hidden)return void r.getTracks().forEach(e=>e.stop());e.cameraStream=r,e.cameraOpening=!1,e.cameraVideo.srcObject=r,e.sources.hidden=!0,e.camera.hidden=!1,await(e.cameraVideo.play?.()),g(e,n.cameraReady),w(e),e.cameraCapture.focus()}catch(o){if(t!==e.cameraRequestId)return;S(e,"NotAllowedError"===o?.name||"SecurityError"===o?.name?n.cameraPermissionDenied:n.cameraFailed)}}(o)),o.cameraCapture.addEventListener("click",()=>async function(e){if(e.cameraCapturing)return;const t=e.cameraVideo.videoWidth,o=e.cameraVideo.videoHeight;if(!e.cameraStream||t<1||o<1)return e.error.textContent=n.captureFailed,void(e.error.hidden=!1);e.cameraCapturing=!0,w(e);const r=document.createElement("canvas");r.width=t,r.height=o;const a=r.getContext("2d");if(!a)return void S(e,n.captureFailed);a.drawImage(e.cameraVideo,0,0,t,o);const i=await new Promise(e=>r.toBlob(e,"image/jpeg",.9));if(r.width=1,r.height=1,!i)return void S(e,n.captureFailed);const d=new File([i],`camera-photo-${Date.now()}.jpg`,{type:"image/jpeg",lastModified:Date.now()});b(e),await E(e,d)}(o)),o.cameraCancel.addEventListener("click",()=>{b(o,!0),g(o,"")}),o.consent.addEventListener("change",()=>w(o)),o.remove.addEventListener("click",()=>function(e){e.busy||e.optimizing||(e.controller?.abort(),e.idempotencyKey="",e.jobId="",l(e),C(e.root,"idle"),h(e,n.imageRemoved),e.file.click())}(o)),o.generate.addEventListener("click",()=>{if(o.generate.disabled)return;const t=new CustomEvent("sea-tryon:generate-requested",{bubbles:!0,cancelable:!0,detail:{productId:e.dataset.productId,variationId:e.dataset.variationId,file:o.uploadFile}});e.dispatchEvent(t),t.defaultPrevented||y(o)}),o.retry?.addEventListener("click",()=>y(o)),o.resultImage.addEventListener("load",()=>{o.zoom.disabled=!o.resultUrl}),o.zoom.addEventListener("click",()=>function(e){const t=e.resultImage.currentSrc||e.resultImage.src;if(!t)return;const o=document.querySelector("#photoswipe-fullscreen-dialog.pswp")||document.querySelector(".pswp"),r=window.PhotoSwipe,a=window.PhotoSwipeUI_Default;if(!o||"function"!=typeof r||"function"!=typeof a)return void window.open(t,"_blank","noopener,noreferrer");const n=e.resultImage.getBoundingClientRect(),i={...window.wc_single_product_params?.photoswipe_options||{},index:0,history:!1,shareEl:!1,closeOnScroll:!1,getThumbBoundsFn:()=>({x:n.left+window.pageXOffset,y:n.top+window.pageYOffset,w:n.width})},d=new r(o,a,[{src:t,w:e.resultImage.naturalWidth||1200,h:e.resultImage.naturalHeight||1200,title:e.resultImage.alt}],i);document.body.classList.add("sea-tryon-lightbox-open"),d.listen("destroy",()=>{document.body.classList.remove("sea-tryon-lightbox-open"),e.zoom.isConnected&&e.zoom.focus()}),d.init()}(o)),e.querySelector("[data-sea-tryon-try-again]")?.addEventListener("click",()=>{o.idempotencyKey="",y(o)}),e.querySelector("[data-sea-tryon-delete]")?.addEventListener("click",()=>p(o,o.resultJobId||o.jobId)),e.dispatchEvent(new CustomEvent("sea-tryon:ready",{bubbles:!0}))}function L(){document.querySelectorAll(e).forEach(_)}document.addEventListener("click",t=>{const o=t.target.closest("[data-sea-tryon-open]");if(!o)return;const r=String(o.dataset.productId||"").replace(/[^0-9]/g,""),n=`${e}[data-product-id="${r}"]`,i=document.querySelector(n),d=i?a.get(i):null;d&&function(e,t){e.trigger=t,e.root.hidden=!1,function(){if(f||!document.body)return;const e=document.documentElement,t=document.body,o=window.scrollX||window.pageXOffset||0,r=window.scrollY||window.pageYOffset||0,a=Math.max(0,window.innerWidth-e.clientWidth),n=Number.parseFloat(window.getComputedStyle(t).paddingRight);f={scrollX:o,scrollY:r,htmlOverflow:e.style.overflow,htmlOverscrollBehavior:e.style.overscrollBehavior,htmlScrollBehavior:e.style.scrollBehavior,bodyPosition:t.style.position,bodyTop:t.style.top,bodyLeft:t.style.left,bodyRight:t.style.right,bodyWidth:t.style.width,bodyBoxSizing:t.style.boxSizing,bodyOverflow:t.style.overflow,bodyOverscrollBehavior:t.style.overscrollBehavior,bodyPaddingRight:t.style.paddingRight},e.classList.add("sea-tryon-modal-open"),t.classList.add("sea-tryon-modal-open"),e.style.overflow="hidden",e.style.overscrollBehavior="none",t.style.position="fixed",t.style.top=`-${r}px`,t.style.left=`-${o}px`,t.style.right="0",t.style.width="100%",t.style.boxSizing="border-box",t.style.overflow="hidden",t.style.overscrollBehavior="none",a>0&&(t.style.paddingRight=`${(Number.isFinite(n)?n:0)+a}px`)}(),e.dialog.focus(),e.root.dispatchEvent(new CustomEvent("sea-tryon:opened",{bubbles:!0}))}(d,o)}),window.jQuery&&(window.jQuery(document).on("found_variation.seaTryOn","form.variations_form",(t,o)=>{const r=t.currentTarget.dataset.product_id,a=String(r||"").replace(/[^0-9]/g,""),n=document.querySelector(`${e}[data-product-id="${a}"]`);n&&I(n,o?.variation_id||0)}),window.jQuery(document).on("reset_data.seaTryOn hide_variation.seaTryOn","form.variations_form",t=>{const o=t.currentTarget.dataset.product_id,r=String(o||"").replace(/[^0-9]/g,""),a=document.querySelector(`${e}[data-product-id="${r}"]`);a&&I(a,0)})),window.SeaTryOnUI=Object.freeze({initialize:L,invalidateForVariation:I,setState:C}),"loading"===document.readyState?document.addEventListener("DOMContentLoaded",L,{once:!0}):L()})();
+/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ({
+
+/***/ "./assets/src/frontend.scss"
+/*!**********************************!*\
+  !*** ./assets/src/frontend.scss ***!
+  \**********************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+// extracted by mini-css-extract-plugin
+
+
+/***/ }
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	const __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		const cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		const module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		if (!(moduleId in __webpack_modules__)) {
+/******/ 			delete __webpack_module_cache__[moduleId];
+/******/ 			const e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 			e.code = 'MODULE_NOT_FOUND';
+/******/ 			throw e;
+/******/ 		}
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter/value functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			if(Array.isArray(definition)) {
+/******/ 				var i = 0;
+/******/ 				while(i < definition.length) {
+/******/ 					var key = definition[i++];
+/******/ 					var binding = definition[i++];
+/******/ 					if(!__webpack_require__.o(exports, key)) {
+/******/ 						if(binding === 0) {
+/******/ 							Object.defineProperty(exports, key, { enumerable: true, value: definition[i++] });
+/******/ 						} else {
+/******/ 							Object.defineProperty(exports, key, { enumerable: true, get: binding });
+/******/ 						}
+/******/ 					} else if(binding === 0) { i++; }
+/******/ 				}
+/******/ 			} else {
+/******/ 				for(var key in definition) {
+/******/ 					if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 						Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 					}
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.hasOwn(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+let __webpack_exports__ = {};
+// This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
+(() => {
+/*!********************************!*\
+  !*** ./assets/src/frontend.js ***!
+  \********************************/
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   initializeTryOnRoots: () => (/* binding */ initializeTryOnRoots),
+/* harmony export */   invalidateForVariation: () => (/* binding */ invalidateForVariation),
+/* harmony export */   setTryOnState: () => (/* binding */ setTryOnState)
+/* harmony export */ });
+/* harmony import */ var _frontend_scss__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./frontend.scss */ "./assets/src/frontend.scss");
+
+const ROOT_SELECTOR = '[data-sea-tryon-root]';
+const READY_ATTRIBUTE = 'data-sea-tryon-ready';
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_IMAGE_WIDTH = 2000;
+const JPEG_QUALITY = 0.9;
+const POLL_INITIAL_INTERVAL_MS = 2000;
+const POLL_MAX_INTERVAL_MS = 10000;
+const MAX_POLL_DURATION_MS = 5 * 60 * 1000;
+const roots = new WeakMap();
+const messages = {
+  invalidType: window.wp?.i18n?.__('Please upload a valid JPEG, PNG, or WebP image.', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'Please upload a valid JPEG, PNG, or WebP image.',
+  fileTooLarge: window.wp?.i18n?.__('This image is too large. Please choose an image under 10 MB.', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'This image is too large. Please choose an image under 10 MB.',
+  imageSelected: window.wp?.i18n?.__('Image selected. Review the consent notice to continue.', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'Image selected. Review the consent notice to continue.',
+  optimizing: window.wp?.i18n?.__('Optimizing your image…', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'Optimizing your image…',
+  optimizationFailed: window.wp?.i18n?.__('We could not optimize this image. Please choose another image.', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'We could not optimize this image. Please choose another image.',
+  variationChanged: window.wp?.i18n?.__('The selected variation changed. Please choose your image again.', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'The selected variation changed. Please choose your image again.',
+  imageRemoved: window.wp?.i18n?.__('Image removed.', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'Image removed.',
+  cameraRequesting: window.wp?.i18n?.__('Requesting camera access…', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'Requesting camera access…',
+  cameraReady: window.wp?.i18n?.__('Camera ready. Position the photo and press Capture photo.', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'Camera ready. Position the photo and press Capture photo.',
+  cameraUnsupported: window.wp?.i18n?.__('Camera capture is not supported in this browser. Please upload a photo instead.', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'Camera capture is not supported in this browser. Please upload a photo instead.',
+  cameraPermissionDenied: window.wp?.i18n?.__('Camera access was blocked. Allow camera permission or upload a photo instead.', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'Camera access was blocked. Allow camera permission or upload a photo instead.',
+  cameraFailed: window.wp?.i18n?.__('We could not access the camera. Please try again or upload a photo instead.', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'We could not access the camera. Please try again or upload a photo instead.',
+  captureFailed: window.wp?.i18n?.__('We could not capture this photo. Please try again.', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'We could not capture this photo. Please try again.',
+  submitting: window.wp?.i18n?.__('Uploading your image securely…', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'Uploading your image securely…',
+  processing: window.wp?.i18n?.__('Generating your preview. This may take a moment…', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'Generating your preview. This may take a moment…',
+  succeeded: window.wp?.i18n?.__('Your preview is ready.', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'Your preview is ready.',
+  genericError: window.wp?.i18n?.__('We could not generate the preview. Please try again.', 'seatryon-ai-virtual-try-on-for-woocommerce') || 'We could not generate the preview. Please try again.'
+};
+
+/** Create a cryptographically random, URL-safe idempotency key. */
+function createIdempotencyKey() {
+  const bytes = new Uint8Array(24);
+  window.crypto.getRandomValues(bytes);
+  return Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Return the localized configuration for this single-product root.
+ *
+ * @param {Object} state Root UI state.
+ */
+function getConfig(state) {
+  const config = window.SeaTryOnConfig;
+  return config && Number(config.productId) === Number(state.root.dataset.productId) ? config : null;
+}
+
+/**
+ * Build authentication headers without placing credentials in URLs.
+ *
+ * @param {Object} config Runtime configuration.
+ * @param {string} action REST action name.
+ */
+function authHeaders(config, action) {
+  if (config.authMode === 'logged-in') {
+    return {
+      'X-WP-Nonce': config.nonce
+    };
+  }
+  return config.tokens?.[action] ? {
+    'X-Sea-TryOn-Token': config.tokens[action]
+  } : {};
+}
+
+/**
+ * Refresh short-lived guest action tokens through the HttpOnly session.
+ *
+ * @param {Object}      config Runtime configuration.
+ * @param {AbortSignal} signal Request abort signal.
+ */
+async function refreshGuestTokens(config, signal) {
+  if (config.authMode !== 'guest') {
+    return;
+  }
+  const response = await window.fetch(config.guestTokenUrl, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      product_id: Number(config.productId)
+    }),
+    signal
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.message || messages.genericError);
+  }
+  config.tokens = payload;
+}
+
+/**
+ * Parse a JSON REST response and keep only its public message.
+ *
+ * @param {Response} response Fetch response.
+ */
+async function readJsonResponse(response) {
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(payload.message || messages.genericError);
+    error.code = payload.code || 'generation_failed';
+    throw error;
+  }
+  return payload;
+}
+
+/**
+ * Revoke a generated result object URL.
+ *
+ * @param {Object} state Root UI state.
+ */
+function clearResult(state) {
+  if (state.resultUrl) {
+    URL.revokeObjectURL(state.resultUrl);
+    state.resultUrl = '';
+  }
+  if (state.resultImage) {
+    state.resultImage.removeAttribute('src');
+  }
+  if (state.download) {
+    state.download.removeAttribute('href');
+  }
+  if (state.result) {
+    state.result.hidden = true;
+  }
+  if (state.zoom) {
+    state.zoom.disabled = true;
+  }
+}
+
+/**
+ * Open the generated result with WooCommerce's PhotoSwipe viewer.
+ *
+ * @param {Object} state Root UI state.
+ */
+function openResultLightbox(state) {
+  const src = state.resultImage.currentSrc || state.resultImage.src;
+  if (!src) {
+    return;
+  }
+  const template = document.querySelector('#photoswipe-fullscreen-dialog.pswp') || document.querySelector('.pswp');
+  const PhotoSwipe = window.PhotoSwipe;
+  const PhotoSwipeUI = window.PhotoSwipeUI_Default;
+  if (!template || typeof PhotoSwipe !== 'function' || typeof PhotoSwipeUI !== 'function') {
+    window.open(src, '_blank', 'noopener,noreferrer');
+    return;
+  }
+  const rect = state.resultImage.getBoundingClientRect();
+  const options = {
+    ...(window.wc_single_product_params?.photoswipe_options || {}),
+    index: 0,
+    history: false,
+    shareEl: false,
+    closeOnScroll: false,
+    getThumbBoundsFn: () => ({
+      x: rect.left + window.pageXOffset,
+      y: rect.top + window.pageYOffset,
+      w: rect.width
+    })
+  };
+  const items = [{
+    src,
+    w: state.resultImage.naturalWidth || 1200,
+    h: state.resultImage.naturalHeight || 1200,
+    title: state.resultImage.alt
+  }];
+  const lightbox = new PhotoSwipe(template, PhotoSwipeUI, items, options);
+  document.body.classList.add('sea-tryon-lightbox-open');
+  lightbox.listen('destroy', () => {
+    document.body.classList.remove('sea-tryon-lightbox-open');
+    if (state.zoom.isConnected) {
+      state.zoom.focus();
+    }
+  });
+  lightbox.init();
+}
+
+/**
+ * Render a safe public failure and allow a new attempt.
+ *
+ * @param {Object} state Root UI state.
+ * @param {Error}  error Public REST or client error.
+ */
+function showFailure(state, error) {
+  const message = error?.message || messages.genericError;
+  setTryOnState(state.root, 'failed');
+  setStatus(state, '');
+  state.error.textContent = message;
+  state.error.hidden = false;
+  if (state.retry) {
+    state.retry.hidden = false;
+    state.retry.focus();
+  }
+}
+
+/**
+ * Fetch and display an authenticated result without leaking its private URL.
+ *
+ * @param {Object} state  Root UI state.
+ * @param {Object} job    Terminal job resource.
+ * @param {Object} config Runtime configuration.
+ */
+async function loadResult(state, job, config) {
+  const response = await window.fetch(job.result_url, {
+    credentials: 'same-origin',
+    headers: authHeaders(config, 'result'),
+    signal: state.controller.signal
+  });
+  if (!response.ok) {
+    await readJsonResponse(response);
+  }
+  const blob = await response.blob();
+  if (!ALLOWED_TYPES.includes(blob.type)) {
+    throw new Error(messages.genericError);
+  }
+  const previousResultJobId = state.resultJobId;
+  clearResult(state);
+  state.resultUrl = URL.createObjectURL(blob);
+  state.resultJobId = job.id;
+  state.resultImage.src = state.resultUrl;
+  state.download.href = state.resultUrl;
+  state.download.download = `virtual-try-on-${job.id}.${blob.type === 'image/jpeg' ? 'jpg' : 'png'}`;
+  state.result.hidden = false;
+  setTryOnState(state.root, 'succeeded', messages.succeeded);
+  if (previousResultJobId && previousResultJobId !== job.id) {
+    deleteJob(state, previousResultJobId, true);
+  }
+}
+
+/**
+ * Poll a job until it reaches a terminal state.
+ *
+ * @param {Object} state  Root UI state.
+ * @param {Object} job    Initial job resource.
+ * @param {Object} config Runtime configuration.
+ */
+async function pollJob(state, job, config) {
+  let started = Date.now();
+  let interval = POLL_INITIAL_INTERVAL_MS;
+  let current = job;
+  while (Date.now() - started < MAX_POLL_DURATION_MS) {
+    if (current.status === 'succeeded') {
+      await loadResult(state, current, config);
+      return;
+    }
+    if (current.status === 'failed' || current.status === 'expired') {
+      throw new Error(current.error?.message || messages.genericError);
+    }
+    if (document.hidden) {
+      const hiddenAt = Date.now();
+      await new Promise((resolve, reject) => {
+        const onVisibilityChange = () => {
+          if (!document.hidden) {
+            cleanup();
+            resolve();
+          }
+        };
+        const onAbort = () => {
+          cleanup();
+          reject(new DOMException('Aborted', 'AbortError'));
+        };
+        const cleanup = () => {
+          document.removeEventListener('visibilitychange', onVisibilityChange);
+          state.controller.signal.removeEventListener('abort', onAbort);
+        };
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        state.controller.signal.addEventListener('abort', onAbort, {
+          once: true
+        });
+      });
+      started += Date.now() - hiddenAt;
+    }
+    await new Promise(resolve => window.setTimeout(resolve, interval));
+    const response = await window.fetch(`${config.restRoot}jobs/${encodeURIComponent(current.id)}`, {
+      credentials: 'same-origin',
+      headers: authHeaders(config, 'status'),
+      signal: state.controller.signal
+    });
+    current = await readJsonResponse(response);
+    interval = Math.min(POLL_MAX_INTERVAL_MS, interval * 2);
+  }
+  throw new Error(messages.genericError);
+}
+
+/**
+ * Submit a local file and start the asynchronous result flow.
+ *
+ * @param {Object} state Root UI state.
+ */
+async function submitJob(state) {
+  const config = getConfig(state);
+  if (!config || config.authMode === 'required' || !state.uploadFile) {
+    return;
+  }
+  state.controller?.abort();
+  state.controller = new AbortController();
+  state.retry.hidden = true;
+  state.error.hidden = true;
+  state.error.textContent = '';
+  setTryOnState(state.root, 'submitting', messages.submitting);
+  try {
+    await refreshGuestTokens(config, state.controller.signal);
+    const data = new FormData();
+    data.append('product_id', String(config.productId));
+    if (Number(state.root.dataset.variationId) > 0) {
+      data.append('variation_id', state.root.dataset.variationId);
+    }
+    data.append('consent', 'true');
+    if (!state.idempotencyKey) {
+      state.idempotencyKey = createIdempotencyKey();
+    }
+    data.append('idempotency_key', state.idempotencyKey);
+    data.append('image', state.uploadFile);
+    const response = await window.fetch(`${config.restRoot}jobs`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: authHeaders(config, 'create'),
+      body: data,
+      signal: state.controller.signal
+    });
+    const job = await readJsonResponse(response);
+    state.idempotencyKey = '';
+    state.jobId = job.id;
+    setTryOnState(state.root, 'processing', messages.processing);
+    await pollJob(state, job, config);
+  } catch (error) {
+    if (error.name !== 'AbortError') {
+      showFailure(state, error);
+    }
+  }
+}
+
+/**
+ * Delete a server-side job and all of its private files.
+ *
+ * @param {Object}  state  Root UI state.
+ * @param {string}  jobId  Job to delete; defaults to current job.
+ * @param {boolean} silent Whether to suppress deletion feedback.
+ */
+async function deleteJob(state, jobId = state.jobId, silent = false) {
+  const config = getConfig(state);
+  if (!config || !jobId) {
+    return;
+  }
+  try {
+    await refreshGuestTokens(config);
+    const response = await window.fetch(`${config.restRoot}jobs/${encodeURIComponent(jobId)}`, {
+      method: 'DELETE',
+      credentials: 'same-origin',
+      headers: authHeaders(config, 'delete')
+    });
+    if (!response.ok) {
+      await readJsonResponse(response);
+    }
+    if (state.jobId === jobId) {
+      state.jobId = '';
+    }
+    if (state.resultJobId === jobId) {
+      state.resultJobId = '';
+      clearResult(state);
+    }
+    if (!silent) {
+      setTryOnState(state.root, 'idle', '');
+    }
+  } catch (error) {
+    if (!silent) {
+      showFailure(state, error);
+    }
+  }
+}
+
+/**
+ * Return focusable, currently available controls inside a dialog.
+ *
+ * @param {HTMLElement} dialog Dialog element.
+ */
+function getFocusableElements(dialog) {
+  return Array.from(dialog.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')).filter(element => !element.closest('[hidden]'));
+}
+
+/**
+ * Announce a non-sensitive UI status.
+ *
+ * @param {Object} state   Root UI state.
+ * @param {string} message Message to announce.
+ */
+function setStatus(state, message) {
+  state.status.textContent = message;
+}
+
+/**
+ * Keep the generate button synchronized with upload, consent and busy state.
+ *
+ * @param {Object} state Root UI state.
+ */
+function updateGenerateState(state) {
+  const completed = state.root.dataset.state === 'succeeded';
+  state.generate.disabled = !state.uploadFile || !state.consent.checked || state.busy || state.optimizing || completed;
+  state.file.disabled = state.busy || state.optimizing || completed;
+  if (state.cameraOpen) {
+    state.cameraOpen.disabled = state.busy || state.optimizing || state.cameraOpening || completed;
+  }
+  if (state.cameraCapture) {
+    state.cameraCapture.disabled = state.busy || state.cameraOpening || state.cameraCapturing;
+  }
+  state.consent.disabled = state.busy || state.optimizing || completed;
+  if (state.remove) {
+    state.remove.disabled = state.busy || state.optimizing;
+  }
+}
+
+/**
+ * Return compact, human-readable metadata for the selected image.
+ *
+ * @param {File} file Selected image file.
+ * @return {string} File type and size.
+ */
+function formatFileMeta(file) {
+  const type = (file.type.split('/')[1] || 'image').replace('jpeg', 'JPG').replace('png', 'PNG').replace('webp', 'WebP');
+  const size = `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+  return `${type} · ${size}`;
+}
+
+/**
+ * Decode a local image file using the browser's native image decoder.
+ *
+ * @param {File} file Local image file.
+ * @return {Promise<HTMLImageElement>} Decoded image.
+ */
+function decodeLocalImage(file) {
+  return new Promise((resolve, reject) => {
+    const sourceUrl = URL.createObjectURL(file);
+    const image = new window.Image();
+    image.onload = () => {
+      URL.revokeObjectURL(sourceUrl);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(sourceUrl);
+      reject(new Error(messages.optimizationFailed));
+    };
+    image.src = sourceUrl;
+  });
+}
+
+/**
+ * Resize an image to a maximum width of 2,000 pixels and encode it as JPEG.
+ *
+ * @param {File} file Valid local JPEG, PNG, or WebP image.
+ * @return {Promise<File>} JPEG upload file encoded at 90% quality.
+ */
+async function optimizeImageForUpload(file) {
+  const image = await decodeLocalImage(file);
+  const sourceWidth = image.naturalWidth || image.width;
+  const sourceHeight = image.naturalHeight || image.height;
+  if (sourceWidth < 1 || sourceHeight < 1) {
+    throw new Error(messages.optimizationFailed);
+  }
+  const targetWidth = Math.min(sourceWidth, MAX_IMAGE_WIDTH);
+  const targetHeight = Math.max(1, Math.round(sourceHeight * (targetWidth / sourceWidth)));
+  const canvas = document.createElement('canvas');
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error(messages.optimizationFailed);
+  }
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = 'high';
+  context.fillStyle = '#fff';
+  context.fillRect(0, 0, targetWidth, targetHeight);
+  context.drawImage(image, 0, 0, targetWidth, targetHeight);
+  const blob = await new Promise((resolve, reject) => {
+    canvas.toBlob(output => {
+      if (output) {
+        resolve(output);
+      } else {
+        reject(new Error(messages.optimizationFailed));
+      }
+    }, 'image/jpeg', JPEG_QUALITY);
+  });
+  const basename = file.name.replace(/\.[^/.]+$/, '') || 'try-on-photo';
+  canvas.width = 1;
+  canvas.height = 1;
+  return new File([blob], `${basename}.jpg`, {
+    type: 'image/jpeg',
+    lastModified: file.lastModified
+  });
+}
+
+/**
+ * Revoke the local preview URL and clear upload state.
+ *
+ * @param {Object} state   Root UI state.
+ * @param {string} message Optional status message.
+ */
+function clearFile(state, message = '') {
+  stopCamera(state);
+  ++state.fileSelectionId;
+  state.uploadFile = null;
+  state.optimizing = false;
+  if (state.previewUrl) {
+    URL.revokeObjectURL(state.previewUrl);
+    state.previewUrl = '';
+  }
+  state.file.value = '';
+  state.fileName.textContent = '';
+  if (state.fileMeta) {
+    state.fileMeta.textContent = '';
+  }
+  state.previewImage.removeAttribute('src');
+  state.preview.hidden = true;
+  state.root.dataset.hasFile = 'false';
+  state.error.hidden = true;
+  state.error.textContent = '';
+  if (state.retry) {
+    state.retry.hidden = true;
+  }
+  updateGenerateState(state);
+  if (message) {
+    setStatus(state, message);
+  }
+}
+
+/**
+ * Reset completed or failed output before opening the photo picker again.
+ *
+ * @param {Object} state Root UI state.
+ */
+function changePhoto(state) {
+  if (state.busy || state.optimizing) {
+    return;
+  }
+  state.controller?.abort();
+  state.idempotencyKey = '';
+  state.jobId = '';
+  clearResult(state);
+  setTryOnState(state.root, 'idle');
+  clearFile(state, messages.imageRemoved);
+  state.file.click();
+}
+let pageScrollLock = null;
+
+/**
+ * Freeze the storefront at its current coordinates while the modal is open.
+ *
+ * @return {void}
+ */
+function lockPageScroll() {
+  if (pageScrollLock || !document.body) {
+    return;
+  }
+  const html = document.documentElement;
+  const body = document.body;
+  const scrollX = window.scrollX || window.pageXOffset || 0;
+  const scrollY = window.scrollY || window.pageYOffset || 0;
+  const scrollbarWidth = Math.max(0, window.innerWidth - html.clientWidth);
+  const computedPadding = Number.parseFloat(window.getComputedStyle(body).paddingRight);
+  pageScrollLock = {
+    scrollX,
+    scrollY,
+    htmlOverflow: html.style.overflow,
+    htmlOverscrollBehavior: html.style.overscrollBehavior,
+    htmlScrollBehavior: html.style.scrollBehavior,
+    bodyPosition: body.style.position,
+    bodyTop: body.style.top,
+    bodyLeft: body.style.left,
+    bodyRight: body.style.right,
+    bodyWidth: body.style.width,
+    bodyBoxSizing: body.style.boxSizing,
+    bodyOverflow: body.style.overflow,
+    bodyOverscrollBehavior: body.style.overscrollBehavior,
+    bodyPaddingRight: body.style.paddingRight
+  };
+  html.classList.add('sea-tryon-modal-open');
+  body.classList.add('sea-tryon-modal-open');
+  html.style.overflow = 'hidden';
+  html.style.overscrollBehavior = 'none';
+  body.style.position = 'fixed';
+  body.style.top = `-${scrollY}px`;
+  body.style.left = `-${scrollX}px`;
+  body.style.right = '0';
+  body.style.width = '100%';
+  body.style.boxSizing = 'border-box';
+  body.style.overflow = 'hidden';
+  body.style.overscrollBehavior = 'none';
+  if (scrollbarWidth > 0) {
+    body.style.paddingRight = `${(Number.isFinite(computedPadding) ? computedPadding : 0) + scrollbarWidth}px`;
+  }
+}
+
+/**
+ * Restore storefront scrolling and the exact styles that existed before lock.
+ *
+ * @return {void}
+ */
+function unlockPageScroll() {
+  if (!pageScrollLock || !document.body) {
+    return;
+  }
+  const html = document.documentElement;
+  const body = document.body;
+  const saved = pageScrollLock;
+  pageScrollLock = null;
+  html.classList.remove('sea-tryon-modal-open');
+  body.classList.remove('sea-tryon-modal-open');
+  html.style.overflow = saved.htmlOverflow;
+  html.style.overscrollBehavior = saved.htmlOverscrollBehavior;
+  body.style.position = saved.bodyPosition;
+  body.style.top = saved.bodyTop;
+  body.style.left = saved.bodyLeft;
+  body.style.right = saved.bodyRight;
+  body.style.width = saved.bodyWidth;
+  body.style.boxSizing = saved.bodyBoxSizing;
+  body.style.overflow = saved.bodyOverflow;
+  body.style.overscrollBehavior = saved.bodyOverscrollBehavior;
+  body.style.paddingRight = saved.bodyPaddingRight;
+  html.style.scrollBehavior = 'auto';
+  window.scrollTo(saved.scrollX, saved.scrollY);
+  html.style.scrollBehavior = saved.htmlScrollBehavior;
+}
+
+/**
+ * Close a dialog and restore focus to the trigger that opened it.
+ *
+ * @param {Object} state Root UI state.
+ */
+function closeDialog(state) {
+  if (state.root.hidden) {
+    return;
+  }
+  stopCamera(state);
+  state.root.hidden = true;
+  unlockPageScroll();
+  if (state.trigger?.isConnected) {
+    state.trigger.focus();
+  }
+  state.root.dispatchEvent(new CustomEvent('sea-tryon:closed', {
+    bubbles: true
+  }));
+}
+
+/**
+ * Open a dialog and move focus into it.
+ *
+ * @param {Object}      state   Root UI state.
+ * @param {HTMLElement} trigger Trigger that opened the dialog.
+ */
+function openDialog(state, trigger) {
+  state.trigger = trigger;
+  state.root.hidden = false;
+  lockPageScroll();
+  state.dialog.focus();
+  state.root.dispatchEvent(new CustomEvent('sea-tryon:opened', {
+    bubbles: true
+  }));
+}
+
+/**
+ * Trap Tab/Shift+Tab and support Escape.
+ *
+ * @param {KeyboardEvent} event Keyboard event.
+ * @param {Object}        state Root UI state.
+ */
+function handleDialogKeydown(event, state) {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeDialog(state);
+    return;
+  }
+  if (event.key !== 'Tab') {
+    return;
+  }
+  const focusable = getFocusableElements(state.dialog);
+  if (focusable.length === 0) {
+    event.preventDefault();
+    state.dialog.focus();
+    return;
+  }
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  const activeElement = state.dialog.ownerDocument.activeElement;
+  if (event.shiftKey && (activeElement === first || activeElement === state.dialog)) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
+/**
+ * Stop all active camera tracks and restore the image source choices.
+ *
+ * @param {Object}  state        Root UI state.
+ * @param {boolean} restoreFocus Whether to focus the camera button.
+ */
+function stopCamera(state, restoreFocus = false) {
+  if (!state.camera) {
+    return;
+  }
+  ++state.cameraRequestId;
+  state.cameraStream?.getTracks().forEach(track => track.stop());
+  if (state.cameraStream || state.cameraVideo.srcObject) {
+    state.cameraVideo.pause?.();
+  }
+  state.cameraStream = null;
+  state.cameraOpening = false;
+  state.cameraCapturing = false;
+  state.cameraVideo.srcObject = null;
+  state.camera.hidden = true;
+  state.sources.hidden = false;
+  updateGenerateState(state);
+  if (restoreFocus && state.cameraOpen.isConnected) {
+    state.cameraOpen.focus();
+  }
+}
+
+/**
+ * Show a camera failure without hiding the upload fallback.
+ *
+ * @param {Object} state   Root UI state.
+ * @param {string} message Public failure message.
+ */
+function showCameraFailure(state, message) {
+  stopCamera(state);
+  setStatus(state, '');
+  state.error.textContent = message;
+  state.error.hidden = false;
+}
+
+/**
+ * Open the device camera inside the modal.
+ *
+ * @param {Object} state Root UI state.
+ */
+async function openCamera(state) {
+  if (state.busy || state.optimizing || state.cameraOpening) {
+    return;
+  }
+  if (!navigator.mediaDevices?.getUserMedia) {
+    showCameraFailure(state, messages.cameraUnsupported);
+    return;
+  }
+  const requestId = ++state.cameraRequestId;
+  state.cameraOpening = true;
+  state.error.hidden = true;
+  state.error.textContent = '';
+  setStatus(state, messages.cameraRequesting);
+  updateGenerateState(state);
+  try {
+    const facingMode = state.root.dataset.experienceMode === 'scene' ? 'environment' : 'user';
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        facingMode: {
+          ideal: facingMode
+        },
+        width: {
+          ideal: 1920
+        },
+        height: {
+          ideal: 1080
+        }
+      }
+    });
+    if (requestId !== state.cameraRequestId || state.root.hidden) {
+      stream.getTracks().forEach(track => track.stop());
+      return;
+    }
+    state.cameraStream = stream;
+    state.cameraOpening = false;
+    state.cameraVideo.srcObject = stream;
+    state.sources.hidden = true;
+    state.camera.hidden = false;
+    await state.cameraVideo.play?.();
+    setStatus(state, messages.cameraReady);
+    updateGenerateState(state);
+    state.cameraCapture.focus();
+  } catch (error) {
+    if (requestId !== state.cameraRequestId) {
+      return;
+    }
+    const denied = error?.name === 'NotAllowedError' || error?.name === 'SecurityError';
+    showCameraFailure(state, denied ? messages.cameraPermissionDenied : messages.cameraFailed);
+  }
+}
+
+/**
+ * Capture the current video frame and pass it through normal image processing.
+ *
+ * @param {Object} state Root UI state.
+ */
+async function captureCameraPhoto(state) {
+  if (state.cameraCapturing) {
+    return;
+  }
+  const width = state.cameraVideo.videoWidth;
+  const height = state.cameraVideo.videoHeight;
+  if (!state.cameraStream || width < 1 || height < 1) {
+    state.error.textContent = messages.captureFailed;
+    state.error.hidden = false;
+    return;
+  }
+  state.cameraCapturing = true;
+  updateGenerateState(state);
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) {
+    showCameraFailure(state, messages.captureFailed);
+    return;
+  }
+  context.drawImage(state.cameraVideo, 0, 0, width, height);
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY));
+  canvas.width = 1;
+  canvas.height = 1;
+  if (!blob) {
+    showCameraFailure(state, messages.captureFailed);
+    return;
+  }
+  const file = new File([blob], `camera-photo-${Date.now()}.jpg`, {
+    type: 'image/jpeg',
+    lastModified: Date.now()
+  });
+  stopCamera(state);
+  await handleSelectedFile(state, file);
+}
+
+/**
+ * Validate and preview a local file without uploading it.
+ *
+ * @param {Object} state Root UI state.
+ * @param {File}   file  Image selected from storage or captured by camera.
+ */
+async function handleSelectedFile(state, file) {
+  const selectionId = ++state.fileSelectionId;
+  if (!file) {
+    clearFile(state);
+    return;
+  }
+  let error = '';
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    error = messages.invalidType;
+  } else if (file.size > Math.min(MAX_FILE_BYTES, Number(getConfig(state)?.maxUploadBytes) || MAX_FILE_BYTES)) {
+    error = messages.fileTooLarge;
+  }
+  if (error) {
+    clearFile(state);
+    setStatus(state, '');
+    state.error.textContent = error;
+    state.error.hidden = false;
+    return;
+  }
+  state.uploadFile = null;
+  state.optimizing = true;
+  state.root.dataset.hasFile = 'false';
+  state.error.hidden = true;
+  state.error.textContent = '';
+  setStatus(state, messages.optimizing);
+  updateGenerateState(state);
+  let uploadFile;
+  try {
+    uploadFile = await optimizeImageForUpload(file);
+  } catch (optimizationError) {
+    if (selectionId !== state.fileSelectionId) {
+      return;
+    }
+    const failureMessage = optimizationError?.message || messages.optimizationFailed;
+    clearFile(state);
+    setStatus(state, '');
+    state.error.textContent = failureMessage;
+    state.error.hidden = false;
+    return;
+  }
+  if (selectionId !== state.fileSelectionId) {
+    return;
+  }
+  const maxUploadBytes = Math.min(MAX_FILE_BYTES, Number(getConfig(state)?.maxUploadBytes) || MAX_FILE_BYTES);
+  if (uploadFile.size > maxUploadBytes) {
+    clearFile(state);
+    setStatus(state, '');
+    state.error.textContent = messages.fileTooLarge;
+    state.error.hidden = false;
+    return;
+  }
+  if (state.previewUrl) {
+    URL.revokeObjectURL(state.previewUrl);
+  }
+  state.uploadFile = uploadFile;
+  state.optimizing = false;
+  state.previewUrl = URL.createObjectURL(uploadFile);
+  state.previewImage.src = state.previewUrl;
+  state.fileName.textContent = uploadFile.name;
+  if (state.fileMeta) {
+    state.fileMeta.textContent = formatFileMeta(uploadFile);
+  }
+  state.preview.hidden = false;
+  state.root.dataset.hasFile = 'true';
+  state.error.hidden = true;
+  state.error.textContent = '';
+  state.retry.hidden = true;
+  setTryOnState(state.root, 'idle');
+  setStatus(state, messages.imageSelected);
+  updateGenerateState(state);
+}
+
+/**
+ * Pass the file input selection into the shared image pipeline.
+ *
+ * @param {Object} state Root UI state.
+ */
+async function handleFileChange(state) {
+  const [file] = state.file.files || [];
+  await handleSelectedFile(state, file);
+}
+
+/**
+ * Invalidate the local input when a variable product selection changes.
+ *
+ * @param {HTMLElement}   root        Modal root.
+ * @param {number|string} variationId Selected variation ID, or zero.
+ * @return {void}
+ */
+function invalidateForVariation(root, variationId) {
+  const state = roots.get(root);
+  if (!state) {
+    return;
+  }
+  const normalized = String(variationId || '0');
+  if (state.root.dataset.variationId === normalized) {
+    return;
+  }
+  state.root.dataset.variationId = normalized;
+  state.controller?.abort();
+  const staleJobs = [...new Set([state.jobId, state.resultJobId].filter(Boolean))];
+  for (const staleJob of staleJobs) {
+    deleteJob(state, staleJob, true);
+  }
+  state.jobId = '';
+  state.resultJobId = '';
+  state.idempotencyKey = '';
+  clearResult(state);
+  clearFile(state, messages.variationChanged);
+  state.root.dispatchEvent(new CustomEvent('sea-tryon:variation-invalidated', {
+    bubbles: true,
+    detail: {
+      variationId: normalized
+    }
+  }));
+}
+
+/**
+ * Set a testable client state without coupling the shell to the M5 REST API.
+ *
+ * @param {HTMLElement} root      Modal root.
+ * @param {string}      nextState New stable state name.
+ * @param {string}      message   Optional live-region message.
+ */
+function setTryOnState(root, nextState, message = '') {
+  const state = roots.get(root);
+  if (!state) {
+    return;
+  }
+  state.busy = nextState === 'submitting' || nextState === 'processing';
+  state.root.dataset.state = nextState;
+  state.dialog.setAttribute('aria-busy', state.busy ? 'true' : 'false');
+  if (state.progress) {
+    state.progress.setAttribute('aria-hidden', state.busy ? 'false' : 'true');
+  }
+  updateGenerateState(state);
+  if (message) {
+    setStatus(state, message);
+  }
+  state.root.dispatchEvent(new CustomEvent('sea-tryon:state-changed', {
+    bubbles: true,
+    detail: {
+      state: nextState
+    }
+  }));
+}
+
+/**
+ * Attach the accessible shell behavior to one server-rendered root.
+ *
+ * @param {HTMLElement} root Modal root.
+ */
+function initializeRoot(root) {
+  if (root.hasAttribute(READY_ATTRIBUTE)) {
+    return;
+  }
+  const state = {
+    root,
+    dialog: root.querySelector('[role="dialog"]'),
+    backdrop: root.querySelector('[data-sea-tryon-backdrop]'),
+    file: root.querySelector('[data-sea-tryon-file]'),
+    sources: root.querySelector('[data-sea-tryon-sources]'),
+    cameraOpen: root.querySelector('[data-sea-tryon-camera-open]'),
+    camera: root.querySelector('[data-sea-tryon-camera]'),
+    cameraVideo: root.querySelector('[data-sea-tryon-camera-video]'),
+    cameraCapture: root.querySelector('[data-sea-tryon-camera-capture]'),
+    cameraCancel: root.querySelector('[data-sea-tryon-camera-cancel]'),
+    preview: root.querySelector('[data-sea-tryon-preview]'),
+    previewImage: root.querySelector('[data-sea-tryon-preview-image]'),
+    fileName: root.querySelector('[data-sea-tryon-file-name]'),
+    fileMeta: root.querySelector('[data-sea-tryon-file-meta]'),
+    remove: root.querySelector('[data-sea-tryon-remove]'),
+    error: root.querySelector('[data-sea-tryon-upload-error]'),
+    consent: root.querySelector('[data-sea-tryon-consent]'),
+    generate: root.querySelector('[data-sea-tryon-generate]'),
+    status: root.querySelector('[data-sea-tryon-status]'),
+    progress: root.querySelector('[data-sea-tryon-progress]'),
+    login: root.querySelector('[data-sea-tryon-login]'),
+    loginLink: root.querySelector('[data-sea-tryon-login-link]'),
+    workflow: root.querySelector('[data-sea-tryon-workflow]'),
+    retry: root.querySelector('[data-sea-tryon-error-retry]'),
+    result: root.querySelector('[data-sea-tryon-result]'),
+    resultImage: root.querySelector('[data-sea-tryon-result-image]'),
+    zoom: root.querySelector('[data-sea-tryon-zoom]'),
+    download: root.querySelector('[data-sea-tryon-download]'),
+    previewUrl: '',
+    resultUrl: '',
+    jobId: '',
+    resultJobId: '',
+    idempotencyKey: '',
+    uploadFile: null,
+    fileSelectionId: 0,
+    optimizing: false,
+    cameraStream: null,
+    cameraOpening: false,
+    cameraCapturing: false,
+    cameraRequestId: 0,
+    controller: null,
+    trigger: null,
+    busy: false
+  };
+  const requiredElements = [state.dialog, state.backdrop, state.file, state.sources, state.cameraOpen, state.camera, state.cameraVideo, state.cameraCapture, state.cameraCancel, state.preview, state.previewImage, state.fileName, state.remove, state.error, state.consent, state.generate, state.status, state.login, state.loginLink, state.workflow, state.retry, state.result, state.resultImage, state.zoom, state.download];
+  if (requiredElements.some(value => value === null)) {
+    return;
+  }
+  roots.set(root, state);
+  root.setAttribute(READY_ATTRIBUTE, 'true');
+  root.dataset.state = 'idle';
+  root.dataset.variationId = '0';
+  root.dataset.hasFile = 'false';
+  const config = getConfig(state);
+  if (config?.authMode === 'required') {
+    state.login.hidden = false;
+    state.loginLink.href = config.loginUrl;
+    state.workflow.hidden = true;
+  }
+  root.addEventListener('keydown', event => handleDialogKeydown(event, state));
+  root.addEventListener('click', event => {
+    const close = event.target.closest('[data-sea-tryon-close]');
+    if (close || event.target === state.backdrop) {
+      closeDialog(state);
+    }
+  });
+  state.file.addEventListener('change', () => handleFileChange(state));
+  state.cameraOpen.addEventListener('click', () => openCamera(state));
+  state.cameraCapture.addEventListener('click', () => captureCameraPhoto(state));
+  state.cameraCancel.addEventListener('click', () => {
+    stopCamera(state, true);
+    setStatus(state, '');
+  });
+  state.consent.addEventListener('change', () => updateGenerateState(state));
+  state.remove.addEventListener('click', () => changePhoto(state));
+  state.generate.addEventListener('click', () => {
+    if (state.generate.disabled) {
+      return;
+    }
+    const event = new CustomEvent('sea-tryon:generate-requested', {
+      bubbles: true,
+      cancelable: true,
+      detail: {
+        productId: root.dataset.productId,
+        variationId: root.dataset.variationId,
+        file: state.uploadFile
+      }
+    });
+    root.dispatchEvent(event);
+    if (!event.defaultPrevented) {
+      submitJob(state);
+    }
+  });
+  state.retry?.addEventListener('click', () => submitJob(state));
+  state.resultImage.addEventListener('load', () => {
+    state.zoom.disabled = !state.resultUrl;
+  });
+  state.zoom.addEventListener('click', () => openResultLightbox(state));
+  root.querySelector('[data-sea-tryon-try-again]')?.addEventListener('click', () => {
+    state.idempotencyKey = '';
+    submitJob(state);
+  });
+  root.querySelector('[data-sea-tryon-delete]')?.addEventListener('click', () => deleteJob(state, state.resultJobId || state.jobId));
+  root.dispatchEvent(new CustomEvent('sea-tryon:ready', {
+    bubbles: true
+  }));
+}
+
+/** Initialize every newly rendered modal root without duplicate listeners. */
+function initializeTryOnRoots() {
+  document.querySelectorAll(ROOT_SELECTOR).forEach(initializeRoot);
+}
+
+/** Open triggers use delegation so block and hook markup share one listener. */
+document.addEventListener('click', event => {
+  const trigger = event.target.closest('[data-sea-tryon-open]');
+  if (!trigger) {
+    return;
+  }
+  const productId = String(trigger.dataset.productId || '').replace(/[^0-9]/g, '');
+  const selector = `${ROOT_SELECTOR}[data-product-id="${productId}"]`;
+  const root = document.querySelector(selector);
+  const state = root ? roots.get(root) : null;
+  if (state) {
+    openDialog(state, trigger);
+  }
+});
+
+/** Observe WooCommerce's public variation form events without guessing M5 data. */
+if (window.jQuery) {
+  window.jQuery(document).on('found_variation.seaTryOn', 'form.variations_form', (event, variation) => {
+    const productId = event.currentTarget.dataset.product_id;
+    const normalized = String(productId || '').replace(/[^0-9]/g, '');
+    const root = document.querySelector(`${ROOT_SELECTOR}[data-product-id="${normalized}"]`);
+    if (root) {
+      invalidateForVariation(root, variation?.variation_id || 0);
+    }
+  });
+  window.jQuery(document).on('reset_data.seaTryOn hide_variation.seaTryOn', 'form.variations_form', event => {
+    const productId = event.currentTarget.dataset.product_id;
+    const normalized = String(productId || '').replace(/[^0-9]/g, '');
+    const root = document.querySelector(`${ROOT_SELECTOR}[data-product-id="${normalized}"]`);
+    if (root) {
+      invalidateForVariation(root, 0);
+    }
+  });
+}
+window.SeaTryOnUI = Object.freeze({
+  initialize: initializeTryOnRoots,
+  invalidateForVariation,
+  setState: setTryOnState
+});
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeTryOnRoots, {
+    once: true
+  });
+} else {
+  initializeTryOnRoots();
+}
+})();
+
+/******/ })()
+;
+//# sourceMappingURL=frontend.js.map
