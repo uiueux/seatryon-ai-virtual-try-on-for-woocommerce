@@ -143,7 +143,7 @@ final class FrontendController {
 		$asset_path = $plugin_path . 'assets/build/frontend.asset.php';
 		$asset      = is_readable( $asset_path ) ? require $asset_path : array();
 		$asset      = is_array( $asset ) ? $asset : array();
-		$version    = isset( $asset['version'] ) ? (string) $asset['version'] : ( defined( 'SEA_TRYON_VERSION' ) ? (string) constant( 'SEA_TRYON_VERSION' ) : '1.1.0' );
+		$version    = isset( $asset['version'] ) ? (string) $asset['version'] : ( defined( 'SEA_TRYON_VERSION' ) ? (string) constant( 'SEA_TRYON_VERSION' ) : '1.1.2' );
 
 		wp_enqueue_style( 'photoswipe-default-skin' );
 		wp_enqueue_style( 'sea-tryon-frontend', $plugin_url . 'assets/build/frontend.css', array( 'dashicons' ), $version );

@@ -37,7 +37,7 @@ $new_translations = array(
 
 $merged = new PO();
 $merged->set_headers( $existing->headers );
-$merged->set_header( 'Project-Id-Version', 'SeaTryon – AI Virtual Try-On for WooCommerce 1.1.0' );
+$merged->set_header( 'Project-Id-Version', 'SeaTryon – AI Virtual Try-On for WooCommerce 1.1.2' );
 $merged->set_header( 'Report-Msgid-Bugs-To', 'https://wordpress.org/support/plugin/seatryon-ai-virtual-try-on-for-woocommerce' );
 $merged->set_header( 'X-Domain', 'seatryon-ai-virtual-try-on-for-woocommerce' );
 $merged->set_header( 'PO-Revision-Date', '2026-08-19 00:00+0800' );

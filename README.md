@@ -13,7 +13,7 @@ SeaTryon is a free WordPress plugin for WooCommerce. It requires a WordPress sit
 
 ## Project status
 
-Version `1.1.0` uses the provider-agnostic WordPress AI Client. The automated implementation gates pass; live connector and final compatibility evidence should still be completed in staging before broad deployment.
+Version `1.1.2` uses the provider-agnostic WordPress AI Client. The automated implementation gates pass; live connector and final compatibility evidence should still be completed in staging before broad deployment.
 
 ## Compatibility baseline
 
@@ -24,7 +24,6 @@ Version `1.1.0` uses the provider-agnostic WordPress AI Client. The automated im
 - Current and previous major releases of Chrome, Edge, Firefox, and Safari for the eventual storefront UI
 
 The extension uses the WooCommerce Classic Product Editor for product-level settings. The storefront integration supports classic templates, block themes, and Site Editor single-product templates through a public WooCommerce hook with a dynamic block fallback. Local validation passed with WooCommerce 10.9.4, Storefront 4.6.2, Twenty Twenty-Five, and a third-party classic theme.
-
 
 ## Installation 
 You can directly download the production version plugin from the [WordPress official website](https://wordpress.org/plugins/seatryon-ai-virtual-try-on-for-woocommerce/). The current Git repository only contains the development version and does not include the directly installable WordPress plugin files.
@@ -76,7 +75,7 @@ On Windows PowerShell, use `npm.cmd` in place of `npm` when the PowerShell execu
 The release archive is assembled from an explicit deny list in `.distignore` and audited before it is accepted:
 
 ```sh
-bash bin/build-zip.sh 1.1.0
+bash bin/build-zip.sh 1.1.2
 ```
 
 The command requires Bash, `rsync`, and `zip`. It writes `dist/seatryon-ai-virtual-try-on-for-woocommerce-<version>.zip`. Internal documents, tests, fixtures, development dependencies, source maps, and likely credential files are excluded. The CI release workflow repeats the audit against the finished ZIP.

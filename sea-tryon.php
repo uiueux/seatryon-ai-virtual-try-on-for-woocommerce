@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SeaTryon – AI Virtual Try-On for WooCommerce
  * Description: Generate AI-powered virtual try-on and product placement previews on WooCommerce product pages.
- * Version: 1.1.0
+ * Version: 1.1.2
  * Requires at least: 7.0
  * Requires PHP: 7.4
  * Requires Plugins: woocommerce
@@ -25,7 +25,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SEA_TRYON_VERSION', '1.1.0' );
+define( 'SEA_TRYON_VERSION', '1.1.2' );
 define( 'SEA_TRYON_MINIMUM_WORDPRESS_VERSION', '7.0' );
 define( 'SEA_TRYON_MINIMUM_WOOCOMMERCE_VERSION', '10.9' );
 define( 'SEA_TRYON_FILE', __FILE__ );

@@ -18,7 +18,7 @@ final class BlockRegistrar {
 	public function register(): void {
 		$plugin_path = defined( 'SEA_TRYON_PATH' ) ? (string) constant( 'SEA_TRYON_PATH' ) : '';
 		$plugin_url  = defined( 'SEA_TRYON_URL' ) ? (string) constant( 'SEA_TRYON_URL' ) : '';
-		$version     = defined( 'SEA_TRYON_VERSION' ) ? (string) constant( 'SEA_TRYON_VERSION' ) : '1.1.0';
+		$version     = defined( 'SEA_TRYON_VERSION' ) ? (string) constant( 'SEA_TRYON_VERSION' ) : '1.1.2';
 
 		if ( '' === $plugin_path || '' === $plugin_url ) {
 			return;

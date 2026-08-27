@@ -47,7 +47,7 @@ $escape = static function ( string $value ): string {
 $output = <<<'POT'
 msgid ""
 msgstr ""
-"Project-Id-Version: SeaTryon – AI Virtual Try-On for WooCommerce 1.1.0\n"
+"Project-Id-Version: SeaTryon – AI Virtual Try-On for WooCommerce 1.1.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/seatryon-ai-virtual-try-on-for-woocommerce\n"
 "POT-Creation-Date: 2026-08-19 00:00+0000\n"
 "MIME-Version: 1.0\n"

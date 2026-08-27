@@ -11,6 +11,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Real WordPress AI Connector and SeaAI person/scene staging generations.
 - WooCommerce 11.x, QIT, and the remaining release compatibility matrix.
 
+## [1.1.2] - 2026-08-27
+
+- Added hats, shoes, and handbags experience types to product settings.
+- Removed the SeaAI quality setting from the WooCommerce settings page.
+
 ## [1.1.0] - 2026-08-19
 
 - Replaced the direct OpenAI image-edit API with the provider-agnostic WordPress 7.0 AI Client.
