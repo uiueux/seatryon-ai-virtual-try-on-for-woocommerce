@@ -29,6 +29,8 @@ When generation is enabled, a customer's uploaded image and the selected product
 
 Input images, generated images, and temporary job data are stored outside the WordPress Media Library and are scheduled for deletion within the configured retention period. The default maximum retention is 24 hours. Store owners are responsible for reviewing the selected provider's terms and privacy policy and for updating their site's privacy notice.
 
+For anonymous abuse prevention, the plugin derives a one-way HMAC value from the web server-provided client IP address when a guest requests generation. This value and the anonymous session are both subject to the configured daily guest limit. The raw IP address is not stored; the one-day quota record is configured to expire at the next site-local midnight.
+
 == External services ==
 
 SeaTryon relies on an external image-generation service for each virtual try-on or product-placement preview. The store owner must configure either a WordPress AI Client connector or the SeaAI Universal X gateway. No image is transmitted until Virtual Try-On is enabled and a shopper submits a generation request after selecting an image.

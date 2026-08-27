@@ -18,8 +18,8 @@ final class MemoryLock implements LockInterface {
 	/** @var bool */
 	private $available = true;
 
-	/** @var bool */
-	private $held = false;
+	/** @var array<string,bool> */
+	private $held = array();
 
 	/** Make subsequent acquisitions available or unavailable. */
 	public function set_available( bool $available ): void {
@@ -29,22 +29,22 @@ final class MemoryLock implements LockInterface {
 	/** {@inheritDoc} */
 	public function acquire( string $key, int $ttl ): ?LockHandle {
 		unset( $ttl );
-		if ( ! $this->available || $this->held ) {
+		if ( ! $this->available || isset( $this->held[ $key ] ) ) {
 			return null;
 		}
 
-		$this->held = true;
+		$this->held[ $key ] = true;
 		return new LockHandle( $key, 'test-owner', 'memory' );
 	}
 
 	/** {@inheritDoc} */
 	public function release( LockHandle $handle ): bool {
 		unset( $handle );
-		if ( ! $this->held ) {
+		if ( ! isset( $this->held[ $handle->key() ] ) ) {
 			return false;
 		}
 
-		$this->held = false;
+		unset( $this->held[ $handle->key() ] );
 		return true;
 	}
 }

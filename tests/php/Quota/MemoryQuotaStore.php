@@ -40,6 +40,11 @@ final class MemoryQuotaStore implements QuotaStoreInterface {
 		$this->states[ $identity_key ] = $state;
 	}
 
+	/** Return the current count for an identity. */
+	public function count_for( string $identity_key ): int {
+		return isset( $this->states[ $identity_key ] ) ? (int) $this->states[ $identity_key ]['count'] : 0;
+	}
+
 	/** Toggle write failure. */
 	public function fail_saves( bool $fail ): void {
 		$this->fail_saves = $fail;

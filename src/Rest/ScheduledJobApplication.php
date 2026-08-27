@@ -41,7 +41,8 @@ final class ScheduledJobApplication implements JobApplicationInterface {
 			$product->prompt(),
 			$command->customer_image_reference(),
 			$product->product_image_reference(),
-			$identity->quota_identity_key()
+			$identity->quota_identity_key(),
+			$identity->guest_ip_quota_identity_key()
 		);
 
 		return $this->creator->create( $request );

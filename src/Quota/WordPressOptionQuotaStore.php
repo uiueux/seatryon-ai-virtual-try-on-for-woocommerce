@@ -1,6 +1,6 @@
 <?php
 /**
- * WordPress option quota store.
+ * WordPress transient quota store.
  *
  * @package SeaTryOn
  */
@@ -10,7 +10,7 @@ namespace SeaTryOn\Quota;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Keeps only the current day per identity, preventing daily option buildup.
+ * Keeps only the active site-local day for each anonymous or user quota identity.
  */
 final class WordPressOptionQuotaStore implements QuotaStoreInterface {
 
@@ -21,12 +21,16 @@ final class WordPressOptionQuotaStore implements QuotaStoreInterface {
 	 * @throws QuotaException When stored state is malformed.
 	 */
 	public function load( string $identity_key ): ?array {
-		$value = get_option( $this->option_name( $identity_key ), null );
+		$name  = $this->option_name( $identity_key );
+		$value = get_transient( $name );
 
-		if ( null === $value ) {
+		// Read a legacy option once so an active quota is not bypassed.
+		if ( false === $value ) {
+			$value = get_option( $name, null );
+		}
+		if ( null === $value || false === $value ) {
 			return null;
 		}
-
 		if ( ! is_array( $value ) ) {
 			throw new QuotaException( 'Stored quota state is malformed.' );
 		}
@@ -39,19 +43,25 @@ final class WordPressOptionQuotaStore implements QuotaStoreInterface {
 	 *
 	 * @param string              $identity_key One-way identity key.
 	 * @param array<string,mixed> $state        State to persist.
+	 * @throws QuotaException When the reset time is malformed.
 	 */
 	public function save( string $identity_key, array $state ): bool {
-		$name = $this->option_name( $identity_key );
-
-		if ( null === get_option( $name, null ) ) {
-			return add_option( $name, $state, '', false );
+		if ( ! isset( $state['resets_at'] ) || ! is_int( $state['resets_at'] ) ) {
+			throw new QuotaException( 'Quota state is missing its reset time.' );
 		}
 
-		return update_option( $name, $state, false );
+		$name  = $this->option_name( $identity_key );
+		$ttl   = max( 1, $state['resets_at'] - time() );
+		$saved = set_transient( $name, $state, $ttl );
+		if ( $saved ) {
+			delete_option( $name );
+		}
+
+		return $saved;
 	}
 
 	/**
-	 * Build a bounded option name without exposing the identity.
+	 * Build a bounded key without exposing the identity.
 	 *
 	 * @param string $identity_key One-way identity key.
 	 */

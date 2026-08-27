@@ -28,13 +28,24 @@ final class RequestIdentity {
 	/** @var QuotaIdentity */
 	private $quota_identity;
 
-	/** @param int|null $user_id WordPress user ID. @param string|null $guest_session_id Guest session. @param string $owner_hash Shared owner hasher output. @param bool $quota_exempt Whether this user bypasses quotas. */
-	public function __construct( ?int $user_id, ?string $guest_session_id, string $owner_hash, bool $quota_exempt = false ) {
-		if ( 1 !== preg_match( '/^[a-f0-9]{64}$/D', $owner_hash ) || ( null === $user_id ) === ( null === $guest_session_id ) || ( $quota_exempt && null === $user_id ) ) {
+	/** @var QuotaIdentity|null */
+	private $guest_ip_quota_identity;
+
+	/** @param int|null $user_id WordPress user ID. @param string|null $guest_session_id Guest session. @param string $owner_hash Shared owner hasher output. @param bool $quota_exempt Whether this user bypasses quotas. @param string|null $guest_ip_quota_identity_key One-way guest IP quota key. */
+	public function __construct( ?int $user_id, ?string $guest_session_id, string $owner_hash, bool $quota_exempt = false, ?string $guest_ip_quota_identity_key = null ) {
+		if ( 1 !== preg_match( '/^[a-f0-9]{64}$/D', $owner_hash ) || ( null === $user_id ) === ( null === $guest_session_id ) || ( $quota_exempt && null === $user_id ) || ( null !== $guest_ip_quota_identity_key && null === $guest_session_id ) ) {
 			throw new \InvalidArgumentException( 'Exactly one request identity and a valid owner hash are required.' );
 		}
 
-		$this->quota_identity   = null !== $user_id ? QuotaIdentity::for_user( $user_id, $quota_exempt ) : QuotaIdentity::for_guest( (string) $guest_session_id );
+		$this->quota_identity          = null !== $user_id ? QuotaIdentity::for_user( $user_id, $quota_exempt ) : QuotaIdentity::for_guest( (string) $guest_session_id );
+		$this->guest_ip_quota_identity = null;
+		if ( null !== $guest_ip_quota_identity_key ) {
+			$identity = QuotaIdentity::from_persisted_key( $guest_ip_quota_identity_key );
+			if ( ! $identity->is_guest_ip() ) {
+				throw new \InvalidArgumentException( 'A valid guest IP quota identity is required.' );
+			}
+			$this->guest_ip_quota_identity = $identity;
+		}
 		$this->user_id          = $user_id;
 		$this->guest_session_id = $guest_session_id;
 		$this->owner_hash       = $owner_hash;
@@ -53,6 +64,21 @@ final class RequestIdentity {
 	/** One-way namespace-safe quota identity key. */
 	public function quota_identity_key(): string {
 		return $this->quota_identity->key();
+	}
+
+	/** @return array<int,string> One-way quota keys required for this request. */
+	public function quota_identity_keys(): array {
+		$keys = array( $this->quota_identity->key() );
+		if ( null !== $this->guest_ip_quota_identity ) {
+			$keys[] = $this->guest_ip_quota_identity->key();
+		}
+
+		return $keys;
+	}
+
+	/** Return the optional one-way guest-IP quota key. */
+	public function guest_ip_quota_identity_key(): ?string {
+		return null === $this->guest_ip_quota_identity ? null : $this->guest_ip_quota_identity->key();
 	}
 
 	/** Whether this request identity bypasses the daily generation quota. */

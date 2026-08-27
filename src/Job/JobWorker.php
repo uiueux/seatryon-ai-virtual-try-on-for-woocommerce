@@ -108,8 +108,17 @@ final class JobWorker {
 				throw new \RuntimeException( 'The selected provider runtime is invalid.' ); }
 			$identity = QuotaIdentity::from_persisted_key( $job->quota_identity_key() );
 			if ( ! $identity->is_quota_exempt() ) {
+				$identities                  = array( $identity );
+				$guest_ip_quota_identity_key = $job->guest_ip_quota_identity_key();
+				if ( null !== $guest_ip_quota_identity_key ) {
+					$guest_ip_identity = QuotaIdentity::from_persisted_key( $guest_ip_quota_identity_key );
+					if ( $identity->is_user() || ! $guest_ip_identity->is_guest_ip() ) {
+						throw new QuotaException( 'Stored guest IP quota identity is invalid.' );
+					}
+					$identities[] = $guest_ip_identity;
+				}
 				$limit        = $identity->is_user() ? $this->settings->get_logged_in_daily_limit() : $this->settings->get_guest_daily_limit();
-				$quota_result = $this->quota->consume_for_dispatch( $identity, $job->id(), $limit );
+				$quota_result = $this->quota->consume_for_dispatches( $identities, $job->id(), $limit );
 				if ( ! $quota_result->is_allowed() ) {
 					$this->terminal_failure( $job, new ProviderError( 'quota_exceeded', 'The daily generation limit has been reached.', false ) );
 					return;

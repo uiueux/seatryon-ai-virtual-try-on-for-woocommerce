@@ -23,7 +23,7 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Job {
 
-	public const SNAPSHOT_VERSION   = 1;
+	public const SNAPSHOT_VERSION   = 2;
 	public const DISPATCH_PENDING   = 'pending';
 	public const DISPATCH_STARTED   = 'started';
 	public const DISPATCH_COMPLETED = 'completed';
@@ -44,6 +44,9 @@ final class Job {
 
 	/** @var string One-way user/guest quota identity key. */
 	private $quota_identity_key;
+
+	/** @var string|null One-way anonymous IP quota identity key. */
+	private $guest_ip_quota_identity_key;
 
 	/**
 	 * Idempotency fingerprint.
@@ -209,30 +212,31 @@ final class Job {
 			throw new InvalidArgumentException( 'Job expiry must be after its creation time.' );
 		}
 
-		$job                           = new self();
-		$job->id                       = $id;
-		$job->owner_hash               = $request->owner_hash();
-		$job->quota_identity_key       = $request->quota_identity_key();
-		$job->idempotency_fingerprint  = $idempotency_fingerprint;
-		$job->product_id               = $request->product_id();
-		$job->variation_id             = $request->variation_id();
-		$job->provider                 = $request->provider();
-		$job->experience_type          = $request->experience_type();
-		$job->prompt                   = $request->prompt();
-		$job->customer_image_reference = $request->customer_image_reference();
-		$job->product_image_reference  = $request->product_image_reference();
-		$job->result_reference         = null;
-		$job->result_mime_type         = null;
-		$job->result_byte_size         = null;
-		$job->error                    = null;
-		$job->status                   = JobStatus::from_string( JobStatus::QUEUED );
-		$job->created_at               = $created_at;
-		$job->expires_at               = $expires_at;
-		$job->processing_at            = null;
-		$job->completed_at             = null;
-		$job->revision                 = 0;
-		$job->dispatch_attempt         = 0;
-		$job->dispatch_state           = self::DISPATCH_PENDING;
+		$job                              = new self();
+		$job->id                          = $id;
+		$job->owner_hash                  = $request->owner_hash();
+		$job->quota_identity_key          = $request->quota_identity_key();
+		$job->guest_ip_quota_identity_key = $request->guest_ip_quota_identity_key();
+		$job->idempotency_fingerprint     = $idempotency_fingerprint;
+		$job->product_id                  = $request->product_id();
+		$job->variation_id                = $request->variation_id();
+		$job->provider                    = $request->provider();
+		$job->experience_type             = $request->experience_type();
+		$job->prompt                      = $request->prompt();
+		$job->customer_image_reference    = $request->customer_image_reference();
+		$job->product_image_reference     = $request->product_image_reference();
+		$job->result_reference            = null;
+		$job->result_mime_type            = null;
+		$job->result_byte_size            = null;
+		$job->error                       = null;
+		$job->status                      = JobStatus::from_string( JobStatus::QUEUED );
+		$job->created_at                  = $created_at;
+		$job->expires_at                  = $expires_at;
+		$job->processing_at               = null;
+		$job->completed_at                = null;
+		$job->revision                    = 0;
+		$job->dispatch_attempt            = 0;
+		$job->dispatch_state              = self::DISPATCH_PENDING;
 
 		return $job;
 	}
@@ -244,6 +248,11 @@ final class Job {
 	 * @return self
 	 */
 	public static function from_snapshot( array $data ): self {
+		$version = $data['version'] ?? null;
+		if ( ! in_array( $version, array( 1, self::SNAPSHOT_VERSION ), true ) ) {
+			throw new InvalidArgumentException( 'Job snapshot schema is invalid.' );
+		}
+
 		$required = array(
 			'version',
 			'revision',
@@ -270,11 +279,14 @@ final class Job {
 			'dispatch_attempt',
 			'dispatch_state',
 		);
-		$keys     = array_keys( $data );
+		if ( self::SNAPSHOT_VERSION === $version ) {
+			$required[] = 'guest_ip_quota_identity_key';
+		}
+		$keys = array_keys( $data );
 		sort( $keys );
 		$expected = $required;
 		sort( $expected );
-		if ( $keys !== $expected || self::SNAPSHOT_VERSION !== $data['version'] ) {
+		if ( $keys !== $expected ) {
 			throw new InvalidArgumentException( 'Job snapshot schema is invalid.' );
 		}
 
@@ -285,6 +297,10 @@ final class Job {
 			if ( ! is_string( $data[ $string_key ] ) ) {
 				throw new InvalidArgumentException( 'Job snapshot contains an invalid scalar.' );
 			}
+		}
+		$guest_ip_quota_identity_key = self::SNAPSHOT_VERSION === $version ? $data['guest_ip_quota_identity_key'] : null;
+		if ( null !== $guest_ip_quota_identity_key && ! is_string( $guest_ip_quota_identity_key ) ) {
+			throw new InvalidArgumentException( 'Job snapshot contains an invalid guest IP quota identity.' );
 		}
 		if ( ! is_int( $data['product_id'] ) || ( null !== $data['variation_id'] && ! is_int( $data['variation_id'] ) ) ) {
 			throw new InvalidArgumentException( 'Job snapshot product identity is invalid.' );
@@ -313,7 +329,8 @@ final class Job {
 			$data['prompt'],
 			'' === $data['customer_image_reference'] ? 'cleared/customer' : $data['customer_image_reference'],
 			'' === $data['product_image_reference'] ? 'cleared/product' : $data['product_image_reference'],
-			$data['quota_identity_key']
+			$data['quota_identity_key'],
+			$guest_ip_quota_identity_key
 		);
 		$job                           = self::create( $data['id'], $data['idempotency_fingerprint'], $request, $created_at, $expires_at );
 		$job->customer_image_reference = $data['customer_image_reference'];
@@ -335,23 +352,24 @@ final class Job {
 	/** @return array<string,mixed> Canonical JSON-safe persistence snapshot. */
 	public function snapshot(): array {
 		return array(
-			'version'                  => self::SNAPSHOT_VERSION,
-			'revision'                 => $this->revision,
-			'id'                       => $this->id,
-			'owner_hash'               => $this->owner_hash,
-			'quota_identity_key'       => $this->quota_identity_key,
-			'idempotency_fingerprint'  => $this->idempotency_fingerprint,
-			'product_id'               => $this->product_id,
-			'variation_id'             => $this->variation_id,
-			'provider'                 => $this->provider,
-			'experience_type'          => $this->experience_type->value(),
-			'prompt'                   => $this->prompt,
-			'customer_image_reference' => $this->customer_image_reference,
-			'product_image_reference'  => $this->product_image_reference,
-			'result_reference'         => $this->result_reference,
-			'result_mime_type'         => $this->result_mime_type,
-			'result_byte_size'         => $this->result_byte_size,
-			'error'                    => null === $this->error ? null : array(
+			'version'                     => self::SNAPSHOT_VERSION,
+			'revision'                    => $this->revision,
+			'id'                          => $this->id,
+			'owner_hash'                  => $this->owner_hash,
+			'quota_identity_key'          => $this->quota_identity_key,
+			'guest_ip_quota_identity_key' => $this->guest_ip_quota_identity_key,
+			'idempotency_fingerprint'     => $this->idempotency_fingerprint,
+			'product_id'                  => $this->product_id,
+			'variation_id'                => $this->variation_id,
+			'provider'                    => $this->provider,
+			'experience_type'             => $this->experience_type->value(),
+			'prompt'                      => $this->prompt,
+			'customer_image_reference'    => $this->customer_image_reference,
+			'product_image_reference'     => $this->product_image_reference,
+			'result_reference'            => $this->result_reference,
+			'result_mime_type'            => $this->result_mime_type,
+			'result_byte_size'            => $this->result_byte_size,
+			'error'                       => null === $this->error ? null : array(
 				'code'                 => $this->error->code(),
 				'message'              => $this->error->message(),
 				'retryable'            => $this->error->is_retryable(),
@@ -359,13 +377,13 @@ final class Job {
 				'http_status'          => $this->error->http_status(),
 				'diagnostic_reference' => $this->error->diagnostic_reference(),
 			),
-			'status'                   => $this->status->value(),
-			'created_at'               => $this->created_at->format( DATE_ATOM ),
-			'expires_at'               => $this->expires_at->format( DATE_ATOM ),
-			'processing_at'            => null === $this->processing_at ? null : $this->processing_at->format( DATE_ATOM ),
-			'completed_at'             => null === $this->completed_at ? null : $this->completed_at->format( DATE_ATOM ),
-			'dispatch_attempt'         => $this->dispatch_attempt,
-			'dispatch_state'           => $this->dispatch_state,
+			'status'                      => $this->status->value(),
+			'created_at'                  => $this->created_at->format( DATE_ATOM ),
+			'expires_at'                  => $this->expires_at->format( DATE_ATOM ),
+			'processing_at'               => null === $this->processing_at ? null : $this->processing_at->format( DATE_ATOM ),
+			'completed_at'                => null === $this->completed_at ? null : $this->completed_at->format( DATE_ATOM ),
+			'dispatch_attempt'            => $this->dispatch_attempt,
+			'dispatch_state'              => $this->dispatch_state,
 		);
 	}
 
@@ -536,6 +554,10 @@ final class Job {
 	/** Get the one-way persisted quota identity key. */
 	public function quota_identity_key(): string {
 		return $this->quota_identity_key; }
+
+	/** Get the optional one-way guest-IP quota identity key. */
+	public function guest_ip_quota_identity_key(): ?string {
+		return $this->guest_ip_quota_identity_key; }
 
 	/** Get the idempotency fingerprint. */
 	public function idempotency_fingerprint(): string {

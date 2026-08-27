@@ -18,6 +18,7 @@ final class QuotaIdentity {
 
 	private const USER      = 'user';
 	private const GUEST     = 'guest';
+	private const GUEST_IP  = 'guest-ip';
 	private const UNLIMITED = 'unlimited';
 
 	/**
@@ -66,9 +67,22 @@ final class QuotaIdentity {
 		return new self( self::GUEST, $session_id );
 	}
 
+	/**
+	 * Create an anonymous IP identity from an already HMAC-derived value.
+	 *
+	 * @param string $address_hash One-way HMAC-SHA-256 address hash.
+	 */
+	public static function for_guest_ip_hash( string $address_hash ): self {
+		if ( 1 !== preg_match( '/^[a-f0-9]{64}$/D', $address_hash ) ) {
+			throw new \InvalidArgumentException( 'A valid one-way guest IP hash is required.' );
+		}
+
+		return new self( self::GUEST_IP, $address_hash );
+	}
+
 	/** Reconstitute only an already one-way, namespaced persisted key. */
 	public static function from_persisted_key( string $key ): self {
-		if ( 1 !== preg_match( '/^(user|guest|unlimited)-[a-f0-9]{64}$/D', $key, $matches ) ) {
+		if ( 1 !== preg_match( '/^(user|guest|guest-ip|unlimited)-[a-f0-9]{64}$/D', $key, $matches ) ) {
 			throw new \InvalidArgumentException( 'A valid persisted quota identity key is required.' );
 		}
 
@@ -88,6 +102,11 @@ final class QuotaIdentity {
 		return self::UNLIMITED === $this->type;
 	}
 
+	/** Whether this identity represents a one-way anonymous IP quota key. */
+	public function is_guest_ip(): bool {
+		return self::GUEST_IP === $this->type;
+	}
+
 	/**
 	 * Return a one-way stable key; never persist the raw guest session ID.
 	 */
@@ -95,7 +114,7 @@ final class QuotaIdentity {
 		if ( null !== $this->persisted_key ) {
 			return $this->persisted_key;
 		}
-		return $this->type . '-' . hash( 'sha256', $this->identifier );
+		return self::GUEST_IP === $this->type ? $this->type . '-' . $this->identifier : $this->type . '-' . hash( 'sha256', $this->identifier );
 	}
 
 	/**

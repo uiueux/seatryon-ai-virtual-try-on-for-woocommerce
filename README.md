@@ -84,6 +84,8 @@ The command requires Bash, `rsync`, and `zip`. It writes `dist/seatryon-ai-virtu
 
 The browser communicates only with the site's WordPress REST API. Provider keys stay server-side. Uploaded and generated images use private temporary storage, do not enter the WordPress Media Library, and default to a maximum retention of 24 hours. The plugin does not transmit customer identity, order, billing, or shipping data to an image provider.
 
+For anonymous abuse prevention, guest generation also uses a one-way HMAC value derived from the web server-provided client IP address together with the anonymous session. The raw IP address is never stored; the one-day quota record is configured to expire at the next site-local midnight.
+
 ## License
 
 Licensed under the GNU General Public License v2.0 or later. See [LICENSE](LICENSE).

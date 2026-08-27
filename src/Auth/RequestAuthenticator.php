@@ -33,13 +33,17 @@ final class RequestAuthenticator {
 	/** @var OwnerIdentityHasher */
 	private $owner_hasher;
 
-	/** @param SettingsRepository $settings Settings. @param GuestSessionManager $sessions Guest sessions. @param ActionTokenService $tokens Tokens. @param SameOriginPolicy $origins Origin policy. @param OwnerIdentityHasher $owner_hasher Shared owner hasher. */
-	public function __construct( SettingsRepository $settings, GuestSessionManager $sessions, ActionTokenService $tokens, SameOriginPolicy $origins, OwnerIdentityHasher $owner_hasher ) {
-		$this->settings     = $settings;
-		$this->sessions     = $sessions;
-		$this->tokens       = $tokens;
-		$this->origins      = $origins;
-		$this->owner_hasher = $owner_hasher;
+	/** @var GuestIpQuotaIdentityResolver */
+	private $guest_ip_quota;
+
+	/** @param SettingsRepository $settings Settings. @param GuestSessionManager $sessions Guest sessions. @param ActionTokenService $tokens Tokens. @param SameOriginPolicy $origins Origin policy. @param OwnerIdentityHasher $owner_hasher Shared owner hasher. @param GuestIpQuotaIdentityResolver|null $guest_ip_quota Guest IP quota resolver. */
+	public function __construct( SettingsRepository $settings, GuestSessionManager $sessions, ActionTokenService $tokens, SameOriginPolicy $origins, OwnerIdentityHasher $owner_hasher, ?GuestIpQuotaIdentityResolver $guest_ip_quota = null ) {
+		$this->settings       = $settings;
+		$this->sessions       = $sessions;
+		$this->tokens         = $tokens;
+		$this->origins        = $origins;
+		$this->owner_hasher   = $owner_hasher;
+		$this->guest_ip_quota = $guest_ip_quota ?? new GuestIpQuotaIdentityResolver();
 	}
 
 	/** Authenticate logged-in cookie+nonce or guest session+token. */
@@ -69,6 +73,6 @@ final class RequestAuthenticator {
 
 		$this->tokens->verify( $token, $session, $product_id, $action, $consume );
 
-		return new RequestIdentity( null, $session, $this->owner_hasher->for_guest_session( $session ) );
+		return new RequestIdentity( null, $session, $this->owner_hasher->for_guest_session( $session ), false, $this->guest_ip_quota->resolve()->key() );
 	}
 }

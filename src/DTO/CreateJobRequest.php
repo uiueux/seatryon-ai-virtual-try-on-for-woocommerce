@@ -84,8 +84,11 @@ final class CreateJobRequest {
 	 */
 	private $product_image_reference;
 
-	/** @var string One-way quota namespace key safe for asynchronous persistence. */
+	/** @var string One-way user/guest quota key safe for asynchronous persistence. */
 	private $quota_identity_key;
+
+	/** @var string|null One-way anonymous IP quota key safe for asynchronous persistence. */
+	private $guest_ip_quota_identity_key;
 
 	/**
 	 * Construct a validated create-job request.
@@ -111,7 +114,8 @@ final class CreateJobRequest {
 		string $prompt,
 		string $customer_image_reference,
 		string $product_image_reference,
-		?string $quota_identity_key = null
+		?string $quota_identity_key = null,
+		?string $guest_ip_quota_identity_key = null
 	) {
 		$provider = strtolower( trim( $provider ) );
 
@@ -146,16 +150,24 @@ final class CreateJobRequest {
 			throw new InvalidArgumentException( 'Quota identity key must be a one-way namespaced SHA-256 value.' );
 		}
 
-		$this->owner_hash               = $owner_hash;
-		$this->idempotency_key          = $idempotency_key;
-		$this->product_id               = $product_id;
-		$this->variation_id             = $variation_id;
-		$this->provider                 = $provider;
-		$this->experience_type          = $experience_type;
-		$this->prompt                   = trim( $prompt );
-		$this->customer_image_reference = trim( $customer_image_reference );
-		$this->product_image_reference  = trim( $product_image_reference );
-		$this->quota_identity_key       = $quota_identity_key;
+		if ( null !== $guest_ip_quota_identity_key ) {
+			$guest_ip_quota_identity_key = trim( $guest_ip_quota_identity_key );
+			if ( 1 !== preg_match( '/^guest-ip-[a-f0-9]{64}$/D', $guest_ip_quota_identity_key ) ) {
+				throw new InvalidArgumentException( 'Guest IP quota identity key must be a one-way namespaced SHA-256 value.' );
+			}
+		}
+
+		$this->owner_hash                  = $owner_hash;
+		$this->idempotency_key             = $idempotency_key;
+		$this->product_id                  = $product_id;
+		$this->variation_id                = $variation_id;
+		$this->provider                    = $provider;
+		$this->experience_type             = $experience_type;
+		$this->prompt                      = trim( $prompt );
+		$this->customer_image_reference    = trim( $customer_image_reference );
+		$this->product_image_reference     = trim( $product_image_reference );
+		$this->quota_identity_key          = $quota_identity_key;
+		$this->guest_ip_quota_identity_key = $guest_ip_quota_identity_key;
 	}
 
 	/** Get the stable owner hash. */
@@ -206,5 +218,10 @@ final class CreateJobRequest {
 	/** Get the one-way persisted quota identity key. */
 	public function quota_identity_key(): string {
 		return $this->quota_identity_key;
+	}
+
+	/** Get the optional one-way guest-IP quota identity key. */
+	public function guest_ip_quota_identity_key(): ?string {
+		return $this->guest_ip_quota_identity_key;
 	}
 }

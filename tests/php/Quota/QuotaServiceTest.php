@@ -122,6 +122,27 @@ final class QuotaServiceTest extends TestCase {
 		$this->service( $store )->consume_for_dispatch( $identity, 'dispatch_00000001', 3 );
 	}
 
+	/** A changed guest cookie cannot bypass the daily limit for the same IP. */
+	public function test_guest_session_and_ip_quotas_must_both_allow_dispatch(): void {
+		$store   = new MemoryQuotaStore();
+		$service = $this->service( $store );
+		$session = QuotaIdentity::for_guest( str_repeat( 'A', 43 ) );
+		$ip      = QuotaIdentity::for_guest_ip_hash( hash_hmac( 'sha256', '203.0.113.10', 'test-secret' ) );
+
+		$first = $service->consume_for_dispatches( array( $session, $ip ), 'guest_dispatch_0001', 1 );
+		self::assertTrue( $first->is_allowed() );
+		self::assertSame( 1, $store->count_for( $session->key() ) );
+		self::assertSame( 1, $store->count_for( $ip->key() ) );
+
+		$replacement_session = QuotaIdentity::for_guest( str_repeat( 'B', 43 ) );
+		$blocked = $service->consume_for_dispatches( array( $replacement_session, $ip ), 'guest_dispatch_0002', 1 );
+		self::assertFalse( $blocked->is_allowed() );
+		self::assertSame( 0, $store->count_for( $replacement_session->key() ) );
+
+		$other_ip = QuotaIdentity::for_guest_ip_hash( hash_hmac( 'sha256', '203.0.113.11', 'test-secret' ) );
+		$second = $service->consume_for_dispatches( array( $replacement_session, $other_ip ), 'guest_dispatch_0003', 1 );
+		self::assertTrue( $second->is_allowed() );
+	}
 	/** Build a UTC service at a deterministic instant. */
 	private function service( MemoryQuotaStore $store ): QuotaService {
 		return new QuotaService(
