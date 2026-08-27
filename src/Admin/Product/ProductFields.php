@@ -308,6 +308,7 @@ final class ProductFields {
 			ExperienceType::CLOTHING           => __( 'Clothing', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
 			ExperienceType::HATS               => __( 'Hats', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
 			ExperienceType::SHOES              => __( 'Shoes', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
+			ExperienceType::HANDBAGS           => __( 'Handbags', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
 			ExperienceType::EARRINGS           => __( 'Earrings', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
 			ExperienceType::RINGS              => __( 'Rings', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
 			ExperienceType::NECKLACES          => __( 'Necklaces', 'seatryon-ai-virtual-try-on-for-woocommerce' ),

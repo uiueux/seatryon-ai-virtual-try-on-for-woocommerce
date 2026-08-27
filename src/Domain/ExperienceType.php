@@ -20,6 +20,7 @@ final class ExperienceType {
 	public const CLOTHING           = 'clothing';
 	public const HATS               = 'hats';
 	public const SHOES              = 'shoes';
+	public const HANDBAGS           = 'handbags';
 	public const EARRINGS           = 'earrings';
 	public const RINGS              = 'rings';
 	public const NECKLACES          = 'necklaces';
@@ -93,6 +94,7 @@ final class ExperienceType {
 			self::CLOTHING,
 			self::HATS,
 			self::SHOES,
+			self::HANDBAGS,
 			self::EARRINGS,
 			self::RINGS,
 			self::NECKLACES,
@@ -149,6 +151,7 @@ final class ExperienceType {
 			self::CLOTHING,
 			self::HATS,
 			self::SHOES,
+			self::HANDBAGS,
 			self::EARRINGS,
 			self::RINGS,
 			self::NECKLACES,

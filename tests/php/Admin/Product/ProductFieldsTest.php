@@ -216,10 +216,11 @@ namespace SeaTryOn\Tests\Admin\Product {
 			self::assertSame( '2000', $GLOBALS['sea_tryon_test_rendered_fields']['textarea']['custom_attributes']['maxlength'] );
 			self::assertSame( 'auto', $GLOBALS['sea_tryon_test_rendered_fields']['select']['value'] );
 			$options = $GLOBALS['sea_tryon_test_rendered_fields']['select']['options'];
-			self::assertCount( 20, $options );
+			self::assertCount( 21, $options );
 			self::assertSame( 'Earrings', $options[ ExperienceType::EARRINGS ] );
 			self::assertSame( 'Hats', $options[ ExperienceType::HATS ] );
 			self::assertSame( 'Shoes', $options[ ExperienceType::SHOES ] );
+			self::assertSame( 'Handbags', $options[ ExperienceType::HANDBAGS ] );
 			self::assertSame( 'Rings', $options[ ExperienceType::RINGS ] );
 			self::assertSame( 'Necklaces', $options[ ExperienceType::NECKLACES ] );
 			self::assertSame( 'Bracelets', $options[ ExperienceType::BRACELETS ] );

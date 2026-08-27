@@ -47,8 +47,9 @@ final class PromptComposerTest extends TestCase {
 		return array(
 			'auto'               => array( ExperienceType::AUTO, 'person or scene' ),
 			'clothing'           => array( ExperienceType::CLOTHING, 'Dress the person' ),
-			'hats'              => array( ExperienceType::HATS, 'selected hat naturally' ),
+			'hats'               => array( ExperienceType::HATS, 'selected hat naturally' ),
 			'shoes'             => array( ExperienceType::SHOES, 'selected shoes naturally' ),
+			'handbags'           => array( ExperienceType::HANDBAGS, 'selected handbag naturally' ),
 			'earrings'           => array( ExperienceType::EARRINGS, 'earlobe or ear piercing position' ),
 			'rings'              => array( ExperienceType::RINGS, 'appropriate finger' ),
 			'necklaces'          => array( ExperienceType::NECKLACES, 'neck and upper chest' ),

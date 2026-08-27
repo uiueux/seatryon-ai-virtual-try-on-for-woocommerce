@@ -16,11 +16,12 @@ defined( 'ABSPATH' ) || exit;
 final class ExperienceTypeTest extends TestCase {
 
 	public function test_exposes_selectable_values_and_retains_legacy_jewelry_support(): void {
-		self::assertCount( 21, ExperienceType::values() );
-		self::assertCount( 20, ExperienceType::selectable_values() );
+		self::assertCount( 22, ExperienceType::values() );
+		self::assertCount( 21, ExperienceType::selectable_values() );
 		self::assertContains( ExperienceType::HATS, ExperienceType::selectable_values() );
-				self::assertContains( ExperienceType::SHOES, ExperienceType::selectable_values() );
-				self::assertContains( ExperienceType::EARRINGS, ExperienceType::selectable_values() );
+		self::assertContains( ExperienceType::SHOES, ExperienceType::selectable_values() );
+		self::assertContains( ExperienceType::HANDBAGS, ExperienceType::selectable_values() );
+		self::assertContains( ExperienceType::EARRINGS, ExperienceType::selectable_values() );
 		self::assertContains( ExperienceType::BODY_CHAINS, ExperienceType::selectable_values() );
 		self::assertNotContains( ExperienceType::JEWELRY, ExperienceType::selectable_values() );
 		self::assertContains( ExperienceType::JEWELRY, ExperienceType::values() );
@@ -45,6 +46,7 @@ final class ExperienceTypeTest extends TestCase {
 		$types = array(
 			ExperienceType::HATS,
 			ExperienceType::SHOES,
+			ExperienceType::HANDBAGS,
 			ExperienceType::EARRINGS,
 			ExperienceType::RINGS,
 			ExperienceType::NECKLACES,
