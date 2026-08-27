@@ -8,7 +8,7 @@
 ## Delivered
 
 - Provider interfaces and validated request/result/error DTOs.
-- Seven experience modes and controlled English prompts for people, apparel, accessories, glasses, wigs, furniture and general product placement.
+- Nine experience modes and controlled English prompts for people, apparel, accessories, glasses, wigs, furniture and general product placement.
 - A PHP 7.4-compatible job state machine, 128-bit CSPRNG IDs, owner-scoped idempotency and atomic repository contract.
 - Typed settings defaults, mutually exclusive provider secret access, constant/filter overrides and fixed-length masking.
 - Recursive log redaction for credentials, cookies, sessions, signatures, result URLs, image payloads and IPv4/IPv6 addresses.

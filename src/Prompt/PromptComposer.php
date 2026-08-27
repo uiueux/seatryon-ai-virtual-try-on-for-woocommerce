@@ -23,6 +23,10 @@ final class PromptComposer {
 
 	private const CLOTHING_TEMPLATE = 'Dress the person in the selected clothing naturally. Preserve the person\'s identity, face, skin tone, hair, pose, body proportions, hands, background, camera angle, and lighting. Adjust only the garment fit, drape, folds, and occlusion needed for a physically plausible result.';
 
+	private const HATS_TEMPLATE = 'Fit the selected hat naturally on the person\'s head. Preserve the person\'s identity, face, skin tone, hair outside the placement area, expression, head pose, body proportions, background, camera angle, and lighting. Keep the hat\'s size, shape, structure, brim orientation, material, color, details, shadows, and occlusion physically plausible.';
+
+	private const SHOES_TEMPLATE = 'Fit the selected shoes naturally on the person\'s feet. Preserve the person\'s identity, body proportions, pose, leg and foot anatomy, clothing outside the placement area, background, camera angle, and lighting. Keep the shoe or pair\'s size, orientation, shape, material, color, details, ground contact, shadows, and occlusion physically plausible.';
+
 	private const EARRINGS_TEMPLATE = 'Place the selected earrings naturally on the person\'s ears. Preserve the person\'s identity, face, skin tone, hair, expression, head pose, background, camera angle, and lighting. Match the product\'s intended single or pair design, align it with the appropriate earlobe or ear piercing position, and keep scale, orientation, metal or gemstone details, reflections, shadows, and occlusion physically plausible.';
 
 	private const RINGS_TEMPLATE = 'Place the selected ring naturally on the appropriate finger. Preserve the person\'s identity, hand anatomy, skin tone, pose, fingernails, background, camera angle, and lighting. Follow the finger\'s perspective and contour, and keep the ring\'s size, orientation, setting, metal or gemstone details, reflections, shadows, and occlusion physically plausible.';
@@ -105,6 +109,8 @@ final class PromptComposer {
 		$templates = array(
 			ExperienceType::AUTO               => self::AUTO_TEMPLATE,
 			ExperienceType::CLOTHING           => self::CLOTHING_TEMPLATE,
+			ExperienceType::HATS               => self::HATS_TEMPLATE,
+			ExperienceType::SHOES              => self::SHOES_TEMPLATE,
 			ExperienceType::EARRINGS           => self::EARRINGS_TEMPLATE,
 			ExperienceType::RINGS              => self::RINGS_TEMPLATE,
 			ExperienceType::NECKLACES          => self::NECKLACES_TEMPLATE,

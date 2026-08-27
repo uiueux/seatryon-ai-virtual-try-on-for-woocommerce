@@ -18,6 +18,8 @@ final class ExperienceType {
 
 	public const AUTO               = 'auto';
 	public const CLOTHING           = 'clothing';
+	public const HATS               = 'hats';
+	public const SHOES              = 'shoes';
 	public const EARRINGS           = 'earrings';
 	public const RINGS              = 'rings';
 	public const NECKLACES          = 'necklaces';
@@ -89,6 +91,8 @@ final class ExperienceType {
 		return array(
 			self::AUTO,
 			self::CLOTHING,
+			self::HATS,
+			self::SHOES,
 			self::EARRINGS,
 			self::RINGS,
 			self::NECKLACES,
@@ -143,6 +147,8 @@ final class ExperienceType {
 	public static function person_values(): array {
 		return array(
 			self::CLOTHING,
+			self::HATS,
+			self::SHOES,
 			self::EARRINGS,
 			self::RINGS,
 			self::NECKLACES,

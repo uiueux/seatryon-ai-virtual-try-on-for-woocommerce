@@ -33,6 +33,8 @@ Open a product in the WooCommerce Classic Product Editor and use **Product data 
 2. Enable **Virtual Try-On**.
 3. Select an experience type:
    - Clothing
+   - Hats
+   - Shoes
    - Earrings
    - Rings
    - Necklaces

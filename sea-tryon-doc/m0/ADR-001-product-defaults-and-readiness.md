@@ -30,7 +30,7 @@ The following defaults are frozen for the first implementation:
 | Delivery | Preview and owner-authorized download; never create a WordPress attachment or Media Library item. |
 | Local retention | Maximum 24 hours, with eager deletion after delivery when no longer needed and on failure/cancellation. |
 | Product default | Virtual Try-On disabled per product until the merchant enables it. |
-| Experience type | `Auto`, with explicit Clothing, Earrings, Rings, Necklaces, Bracelets, Nose Rings, Belly Button Rings, Hair Accessories, Anklets, Brooches & Pins, Lip Rings, Tongue Rings, Body Chains, Glasses, Wig, Furniture and Product Placement modes. |
+| Experience type | `Auto`, with explicit Clothing, Hats, Shoes, Earrings, Rings, Necklaces, Bracelets, Nose Rings, Belly Button Rings, Hair Accessories, Anklets, Brooches & Pins, Lip Rings, Tongue Rings, Body Chains, Glasses, Wig, Furniture and Product Placement modes. |
 | User-facing language | English source strings, fully translatable through WordPress i18n. |
 | Compatibility baseline | WordPress 6.9+, WooCommerce 10.9+ (including WC 11.x), PHP 7.4+. |
 

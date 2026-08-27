@@ -16,9 +16,11 @@ defined( 'ABSPATH' ) || exit;
 final class ExperienceTypeTest extends TestCase {
 
 	public function test_exposes_selectable_values_and_retains_legacy_jewelry_support(): void {
-		self::assertCount( 19, ExperienceType::values() );
-		self::assertCount( 18, ExperienceType::selectable_values() );
-		self::assertContains( ExperienceType::EARRINGS, ExperienceType::selectable_values() );
+		self::assertCount( 21, ExperienceType::values() );
+		self::assertCount( 20, ExperienceType::selectable_values() );
+		self::assertContains( ExperienceType::HATS, ExperienceType::selectable_values() );
+				self::assertContains( ExperienceType::SHOES, ExperienceType::selectable_values() );
+				self::assertContains( ExperienceType::EARRINGS, ExperienceType::selectable_values() );
 		self::assertContains( ExperienceType::BODY_CHAINS, ExperienceType::selectable_values() );
 		self::assertNotContains( ExperienceType::JEWELRY, ExperienceType::selectable_values() );
 		self::assertContains( ExperienceType::JEWELRY, ExperienceType::values() );
@@ -39,8 +41,10 @@ final class ExperienceTypeTest extends TestCase {
 		self::assertTrue( $person->equals( ExperienceType::from_string( ExperienceType::WIG ) ) );
 	}
 
-	public function test_classifies_each_jewelry_subtype_as_a_person_experience(): void {
+	public function test_classifies_wearable_types_as_person_experiences(): void {
 		$types = array(
+			ExperienceType::HATS,
+			ExperienceType::SHOES,
 			ExperienceType::EARRINGS,
 			ExperienceType::RINGS,
 			ExperienceType::NECKLACES,
@@ -63,6 +67,6 @@ final class ExperienceTypeTest extends TestCase {
 
 	public function test_rejects_unknown_type(): void {
 		$this->expectException( InvalidArgumentException::class );
-		ExperienceType::from_string( 'shoes' );
+		ExperienceType::from_string( 'unknown' );
 	}
 }

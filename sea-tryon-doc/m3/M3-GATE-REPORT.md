@@ -10,7 +10,7 @@
 - A native WooCommerce **Products > Virtual Try-On** settings section with global enablement, mutually exclusive OpenAI/SeaAI configuration, quality, guest access, daily limits and debug controls.
 - Fixed-length credential masking, blank/masked submission preservation and non-autoloaded API key options.
 - Read-only aggregate success statistics plus a capability-, nonce- and confirmation-protected reset action.
-- Classic Product Editor fields for enablement, a sanitized 2,000-character product prompt and seven controlled experience types.
+- Classic Product Editor fields for enablement, a sanitized 2,000-character product prompt and nine controlled experience types.
 - Atomic product-field rejection for invalid input, missing prompt or missing/unreadable parent-product image, for both simple and variable parent products.
 - Capability-aware, escaped diagnostic notices for incomplete provider configuration, WooCommerce dependencies and unsafe/unavailable private temporary storage.
 - Central M3 registration through `Plugin` only after WooCommerce runtime checks pass and only for administration requests.
