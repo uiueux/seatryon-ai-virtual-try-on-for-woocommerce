@@ -175,6 +175,7 @@ final class SettingsPage {
 				__( 'Maximum provider dispatches per anonymous session each day.', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
 				'sea-tryon-guests-only'
 			),
+			$this->site_limit_field(),
 			array(
 				'title'   => __( 'Debug mode', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
 				'desc'    => __( 'Write sanitized diagnostic events to the WooCommerce log.', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
@@ -453,6 +454,27 @@ final class SettingsPage {
 			'custom_attributes' => array(
 				'min'  => '1',
 				'max'  => '100',
+				'step' => '1',
+			),
+		);
+	}
+
+	/**
+	 * Build the optional whole-site daily dispatch limit field.
+	 *
+	 * @return array<string,mixed> Field definition.
+	 */
+	private function site_limit_field(): array {
+		return array(
+			'title'             => __( 'Site daily limit', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
+			'desc'              => __( 'Maximum provider dispatches across the entire site each day. Set 0 to disable this limit.', 'seatryon-ai-virtual-try-on-for-woocommerce' ),
+			'desc_tip'          => true,
+			'id'                => SettingsRepository::OPTION_SITE_DAILY_LIMIT,
+			'type'              => 'number',
+			'default'           => '30',
+			'custom_attributes' => array(
+				'min'  => '0',
+				'max'  => '100000',
 				'step' => '1',
 			),
 		);

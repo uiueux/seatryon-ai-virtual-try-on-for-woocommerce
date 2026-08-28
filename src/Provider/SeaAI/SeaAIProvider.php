@@ -374,7 +374,10 @@ final class SeaAIProvider implements ProviderInterface {
 	 * @return array<string,string>
 	 */
 	private function auth_headers(): array {
-		return array( 'Authorization' => 'Bearer ' . $this->api_key );
+		return array(
+			'Authorization'           => 'Bearer ' . $this->api_key,
+			'X-SeaAI-Source-Origin' => home_url( '/' ),
+		);
 	}
 
 	/**

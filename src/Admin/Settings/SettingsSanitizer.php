@@ -67,6 +67,7 @@ final class SettingsSanitizer {
 		add_filter( 'woocommerce_admin_settings_sanitize_option_' . SettingsRepository::OPTION_SEAAI_QUALITY, array( $this, 'sanitize_seaai_quality' ), 10, 1 );
 		add_filter( 'woocommerce_admin_settings_sanitize_option_' . SettingsRepository::OPTION_LOGGED_IN_DAILY_LIMIT, array( $this, 'sanitize_daily_limit' ), 10, 1 );
 		add_filter( 'woocommerce_admin_settings_sanitize_option_' . SettingsRepository::OPTION_GUEST_DAILY_LIMIT, array( $this, 'sanitize_daily_limit' ), 10, 1 );
+		add_filter( 'woocommerce_admin_settings_sanitize_option_' . SettingsRepository::OPTION_SITE_DAILY_LIMIT, array( $this, 'sanitize_site_daily_limit' ), 10, 1 );
 		add_filter( 'woocommerce_admin_settings_sanitize_option_' . SettingsRepository::OPTION_TRIGGER_DESKTOP_HEIGHT, array( $this, 'sanitize_trigger_height' ), 10, 1 );
 		add_filter( 'woocommerce_admin_settings_sanitize_option_' . SettingsRepository::OPTION_TRIGGER_MOBILE_HEIGHT, array( $this, 'sanitize_trigger_height' ), 10, 1 );
 		add_filter( 'woocommerce_admin_settings_sanitize_option_' . SettingsRepository::OPTION_TRIGGER_BORDER_WIDTH, array( $this, 'sanitize_trigger_border_width' ), 10, 1 );
@@ -149,6 +150,18 @@ final class SettingsSanitizer {
 		$limit = is_numeric( $value ) ? (int) $value : 3;
 
 		return (string) min( 100, max( 1, $limit ) );
+	}
+
+	/**
+	 * Bound the optional whole-site daily limit to a practical range.
+	 *
+	 * @param mixed $value Sanitized WooCommerce value.
+	 * @return string WooCommerce stores scalar settings as strings.
+	 */
+	public function sanitize_site_daily_limit( $value ): string {
+		$limit = is_numeric( $value ) ? (int) $value : 30;
+
+		return (string) min( 100000, max( 0, $limit ) );
 	}
 
 	/**

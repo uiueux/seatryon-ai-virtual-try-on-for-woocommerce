@@ -143,6 +143,25 @@ final class QuotaServiceTest extends TestCase {
 		$second = $service->consume_for_dispatches( array( $replacement_session, $other_ip ), 'guest_dispatch_0003', 1 );
 		self::assertTrue( $second->is_allowed() );
 	}
+
+	/** The whole-site cap is atomic with individual limits and counts every identity type. */
+	public function test_site_daily_limit_blocks_all_subsequent_dispatches_without_charging_the_new_identity(): void {
+		$store   = new MemoryQuotaStore();
+		$service = $this->service( $store );
+		$site    = QuotaIdentity::for_site();
+		$user    = QuotaIdentity::for_user( 42 );
+		$guest   = QuotaIdentity::for_guest( str_repeat( 'C', 43 ) );
+
+		$first = $service->consume_for_dispatches( array( $user, $site ), 'site_dispatch_00001', 3, 1 );
+		self::assertTrue( $first->is_allowed() );
+		self::assertSame( 1, $store->count_for( $site->key() ) );
+
+		$blocked = $service->consume_for_dispatches( array( $guest, $site ), 'site_dispatch_00002', 3, 1 );
+		self::assertFalse( $blocked->is_allowed() );
+		self::assertSame( 0, $store->count_for( $guest->key() ) );
+		self::assertSame( 1, $store->count_for( $site->key() ) );
+	}
+
 	/** Build a UTC service at a deterministic instant. */
 	private function service( MemoryQuotaStore $store ): QuotaService {
 		return new QuotaService(

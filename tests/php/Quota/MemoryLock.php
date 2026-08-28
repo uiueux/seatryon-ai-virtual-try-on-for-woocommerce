@@ -39,7 +39,6 @@ final class MemoryLock implements LockInterface {
 
 	/** {@inheritDoc} */
 	public function release( LockHandle $handle ): bool {
-		unset( $handle );
 		if ( ! isset( $this->held[ $handle->key() ] ) ) {
 			return false;
 		}

@@ -56,6 +56,7 @@ final class SettingsRepository {
 	public const OPTION_ALLOW_GUESTS                   = 'sea_tryon_allow_guests';
 	public const OPTION_LOGGED_IN_DAILY_LIMIT          = 'sea_tryon_logged_in_daily_limit';
 	public const OPTION_GUEST_DAILY_LIMIT              = 'sea_tryon_guest_daily_limit';
+	public const OPTION_SITE_DAILY_LIMIT               = 'sea_tryon_site_daily_limit';
 	public const OPTION_DEBUG_MODE                     = 'sea_tryon_debug_mode';
 	public const OPTION_SUCCESS_COUNT                  = 'sea_tryon_success_count';
 	public const OPTION_TRIGGER_TEXT_COLOR             = 'sea_tryon_trigger_text_color';
@@ -140,6 +141,17 @@ final class SettingsRepository {
 	 */
 	public function get_guest_daily_limit(): int {
 		return $this->bounded_int( $this->options->get( self::OPTION_GUEST_DAILY_LIMIT, 3 ), 3, 1, 100 );
+	}
+
+	/**
+	 * Return the optional whole-site daily dispatch limit.
+	 *
+	 * A value of zero explicitly leaves the global cap disabled.
+	 */
+	public function get_site_daily_limit(): ?int {
+		$limit = $this->bounded_int( $this->options->get( self::OPTION_SITE_DAILY_LIMIT, 30 ), 30, 0, 100000 );
+
+		return $limit > 0 ? $limit : null;
 	}
 
 	/**

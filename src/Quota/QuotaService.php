@@ -22,7 +22,8 @@ defined( 'ABSPATH' ) || exit;
  */
 final class QuotaService {
 
-	private const LOCK_TTL = 10;
+	private const LOCK_TTL        = 10;
+	private const MAX_DAILY_LIMIT = 100000;
 
 	/** @var QuotaStoreInterface */
 	private $store;
@@ -69,26 +70,34 @@ final class QuotaService {
 	 *
 	 * @param array<int,QuotaIdentity> $identities Required identities.
 	 * @param string                   $dispatch_id Stable provider dispatch ID.
-	 * @param int                      $daily_limit Configured daily limit.
+	 * @param int                      $daily_limit      Configured per-identity daily limit.
+	 * @param int|null                 $site_daily_limit Optional whole-site daily limit.
 	 * @return QuotaResult Consumption result.
 	 * @throws QuotaException When locking or persistence fails.
 	 */
-	public function consume_for_dispatches( array $identities, string $dispatch_id, int $daily_limit ): QuotaResult {
-		if ( $daily_limit < 1 || $daily_limit > 100 ) {
-			throw new \InvalidArgumentException( 'Daily quota must be between 1 and 100.' );
+	public function consume_for_dispatches( array $identities, string $dispatch_id, int $daily_limit, ?int $site_daily_limit = null ): QuotaResult {
+		if ( $daily_limit < 1 || $daily_limit > self::MAX_DAILY_LIMIT ) {
+			throw new \InvalidArgumentException( 'Daily quota is outside the supported range.' );
+		}
+		if ( null !== $site_daily_limit && ( $site_daily_limit < 1 || $site_daily_limit > self::MAX_DAILY_LIMIT ) ) {
+			throw new \InvalidArgumentException( 'Site daily quota is outside the supported range.' );
 		}
 		if ( strlen( $dispatch_id ) < 16 || strlen( $dispatch_id ) > 128 || 1 !== preg_match( '/^[A-Za-z0-9_-]+$/', $dispatch_id ) ) {
 			throw new \InvalidArgumentException( 'A valid provider dispatch ID is required.' );
 		}
 
-		$identity_keys = array();
+		$identity_limits = array();
 		foreach ( $identities as $identity ) {
 			if ( ! $identity instanceof QuotaIdentity || $identity->is_quota_exempt() ) {
 				throw new \InvalidArgumentException( 'Only limited quota identities may be consumed.' );
 			}
-			$identity_keys[] = $identity->key();
+			$limit = $identity->is_site() ? $site_daily_limit : $daily_limit;
+			if ( null === $limit ) {
+				throw new \InvalidArgumentException( 'A site daily quota is required for the site identity.' );
+			}
+			$identity_limits[ $identity->key() ] = $limit;
 		}
-		$identity_keys = array_values( array_unique( $identity_keys ) );
+		$identity_keys = array_keys( $identity_limits );
 		sort( $identity_keys, SORT_STRING );
 		if ( array() === $identity_keys ) {
 			throw new \InvalidArgumentException( 'At least one quota identity is required.' );
@@ -105,30 +114,31 @@ final class QuotaService {
 		}
 
 		try {
-			return $this->consume_under_locks( $identity_keys, $dispatch_id, $daily_limit );
+			return $this->consume_under_locks( $identity_keys, $identity_limits, $dispatch_id );
 		} finally {
 			$this->release_handles( $handles );
 		}
 	}
 
 	/**
-	 * @param array<int,string> $identity_keys Sorted identity keys.
-	 * @param string            $dispatch_id   Provider dispatch ID.
-	 * @param int               $daily_limit   Daily limit.
+	 * @param array<int,string> $identity_keys   Sorted identity keys.
+	 * @param array<string,int> $identity_limits Configured limit by identity key.
+	 * @param string            $dispatch_id     Provider dispatch ID.
 	 */
-	private function consume_under_locks( array $identity_keys, string $dispatch_id, int $daily_limit ): QuotaResult {
+	private function consume_under_locks( array $identity_keys, array $identity_limits, string $dispatch_id ): QuotaResult {
 		$now       = $this->clock->now()->setTimezone( $this->site_timezone );
 		$bucket    = $now->format( 'Y-m-d' );
 		$resets_at = $now->setTime( 0, 0, 0 )->modify( '+1 day' );
 		$states    = array();
 		$changed   = array();
-		$remaining = $daily_limit;
+		$remaining = self::MAX_DAILY_LIMIT;
 		$hash      = hash( 'sha256', $dispatch_id );
 
 		foreach ( $identity_keys as $identity_key ) {
+			$limit = $identity_limits[ $identity_key ];
 			$state = $this->current_day_state( $this->store->load( $identity_key ), $bucket, $resets_at );
 			$seen  = in_array( $hash, $state['dispatches'], true );
-			if ( ! $seen && (int) $state['count'] >= $daily_limit ) {
+			if ( ! $seen && (int) $state['count'] >= $limit ) {
 				return new QuotaResult( false, false, 0, $resets_at );
 			}
 			if ( ! $seen ) {
@@ -138,7 +148,7 @@ final class QuotaService {
 				$changed[ $identity_key ] = true;
 			}
 			$states[ $identity_key ] = $state;
-			$remaining               = min( $remaining, $daily_limit - (int) $state['count'] );
+			$remaining               = min( $remaining, $limit - (int) $state['count'] );
 		}
 
 		foreach ( array_keys( $changed ) as $identity_key ) {
@@ -200,7 +210,7 @@ final class QuotaService {
 			! isset( $state['count'], $state['dispatches'] ) ||
 			! is_int( $state['count'] ) ||
 			$state['count'] < 0 ||
-			$state['count'] > 100 ||
+			$state['count'] > self::MAX_DAILY_LIMIT ||
 			! is_array( $state['dispatches'] ) ||
 			count( $state['dispatches'] ) !== $state['count']
 		) {

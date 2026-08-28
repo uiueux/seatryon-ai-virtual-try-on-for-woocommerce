@@ -10,6 +10,7 @@ namespace SeaTryOn\Rest;
 use DateTimeZone;
 use SeaTryOn\Auth\RequestIdentity;
 use SeaTryOn\Contracts\ClockInterface;
+use SeaTryOn\Quota\QuotaIdentity;
 use SeaTryOn\Quota\QuotaStoreInterface;
 use SeaTryOn\Settings\SettingsRepository;
 
@@ -54,14 +55,23 @@ final class WordPressQuotaPreflight implements QuotaPreflightInterface {
 	}
 
 	public function assert_available( RequestIdentity $identity ): void {
-		if ( $identity->is_quota_exempt() ) {
+		$limits = array();
+		if ( ! $identity->is_quota_exempt() ) {
+			$limit = $identity->is_logged_in() ? $this->settings->get_logged_in_daily_limit() : $this->settings->get_guest_daily_limit();
+			foreach ( $identity->quota_identity_keys() as $identity_key ) {
+				$limits[ $identity_key ] = $limit;
+			}
+		}
+		$site_limit = $this->settings->get_site_daily_limit();
+		if ( null !== $site_limit ) {
+			$limits[ QuotaIdentity::for_site()->key() ] = $site_limit;
+		}
+		if ( array() === $limits ) {
 			return;
 		}
 
-		$now   = $this->clock->now()->setTimezone( $this->timezone );
-		$limit = $identity->is_logged_in() ? $this->settings->get_logged_in_daily_limit() : $this->settings->get_guest_daily_limit();
-
-		foreach ( $identity->quota_identity_keys() as $identity_key ) {
+		$now = $this->clock->now()->setTimezone( $this->timezone );
+		foreach ( $limits as $identity_key => $limit ) {
 			$state = $this->store->load( $identity_key );
 			if ( null === $state ) {
 				continue;

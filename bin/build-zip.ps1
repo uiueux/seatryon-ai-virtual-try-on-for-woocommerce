@@ -18,7 +18,7 @@ $Zip = Join-Path $Dist "seatryon-ai-virtual-try-on-for-woocommerce-$Version.zip"
 $Checksum = "$Zip.sha256"
 
 $ExcludedDirectories = @(
-	'.git', '.github', '.idea', '.vscode', '.wp-env',
+	'.agents', '.git', '.github', '.idea', '.vscode', '.wp-env',
 	'bin', 'coverage', 'dist', 'fixtures', 'node_modules',
 	'scripts', 'stubs', 'tests', 'vendor', 'sea-tryon-doc'
 )

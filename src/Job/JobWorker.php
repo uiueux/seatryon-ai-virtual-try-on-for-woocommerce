@@ -106,9 +106,12 @@ final class JobWorker {
 			$runtime = call_user_func( $this->runtime_factory, $job );
 			if ( ! $runtime instanceof ProviderRuntime ) {
 				throw new \RuntimeException( 'The selected provider runtime is invalid.' ); }
-			$identity = QuotaIdentity::from_persisted_key( $job->quota_identity_key() );
+			$identity   = QuotaIdentity::from_persisted_key( $job->quota_identity_key() );
+			$identities = array();
+			$limit      = $identity->is_user() ? $this->settings->get_logged_in_daily_limit() : $this->settings->get_guest_daily_limit();
+			$site_limit = $this->settings->get_site_daily_limit();
 			if ( ! $identity->is_quota_exempt() ) {
-				$identities                  = array( $identity );
+				$identities[]                = $identity;
 				$guest_ip_quota_identity_key = $job->guest_ip_quota_identity_key();
 				if ( null !== $guest_ip_quota_identity_key ) {
 					$guest_ip_identity = QuotaIdentity::from_persisted_key( $guest_ip_quota_identity_key );
@@ -117,8 +120,12 @@ final class JobWorker {
 					}
 					$identities[] = $guest_ip_identity;
 				}
-				$limit        = $identity->is_user() ? $this->settings->get_logged_in_daily_limit() : $this->settings->get_guest_daily_limit();
-				$quota_result = $this->quota->consume_for_dispatches( $identities, $job->id(), $limit );
+			}
+			if ( null !== $site_limit ) {
+				$identities[] = QuotaIdentity::for_site();
+			}
+			if ( array() !== $identities ) {
+				$quota_result = $this->quota->consume_for_dispatches( $identities, $job->id(), $limit, $site_limit );
 				if ( ! $quota_result->is_allowed() ) {
 					$this->terminal_failure( $job, new ProviderError( 'quota_exceeded', 'The daily generation limit has been reached.', false ) );
 					return;

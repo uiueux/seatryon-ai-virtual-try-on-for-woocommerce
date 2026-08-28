@@ -1,6 +1,7 @@
 # Version-control and automation files.
 /.git/
 /.github/
+/.agents/
 /.gitignore
 /.gitattributes
 /.distignore

@@ -19,6 +19,7 @@ final class QuotaIdentity {
 	private const USER      = 'user';
 	private const GUEST     = 'guest';
 	private const GUEST_IP  = 'guest-ip';
+	private const SITE      = 'site';
 	private const UNLIMITED = 'unlimited';
 
 	/**
@@ -80,9 +81,14 @@ final class QuotaIdentity {
 		return new self( self::GUEST_IP, $address_hash );
 	}
 
+	/** Create the single whole-site dispatch identity. */
+	public static function for_site(): self {
+		return new self( self::SITE, 'all-dispatches' );
+	}
+
 	/** Reconstitute only an already one-way, namespaced persisted key. */
 	public static function from_persisted_key( string $key ): self {
-		if ( 1 !== preg_match( '/^(user|guest|guest-ip|unlimited)-[a-f0-9]{64}$/D', $key, $matches ) ) {
+		if ( 1 !== preg_match( '/^(user|guest|guest-ip|site|unlimited)-[a-f0-9]{64}$/D', $key, $matches ) ) {
 			throw new \InvalidArgumentException( 'A valid persisted quota identity key is required.' );
 		}
 
@@ -105,6 +111,11 @@ final class QuotaIdentity {
 	/** Whether this identity represents a one-way anonymous IP quota key. */
 	public function is_guest_ip(): bool {
 		return self::GUEST_IP === $this->type;
+	}
+
+	/** Whether this identity applies to every provider dispatch on the site. */
+	public function is_site(): bool {
+		return self::SITE === $this->type;
 	}
 
 	/**

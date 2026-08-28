@@ -25,3 +25,4 @@ secrets.*
 *.key
 *.pem
 
+/.agents/skills/
