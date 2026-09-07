@@ -101,6 +101,7 @@ function fixture() {
 		tryAgain: document.querySelector( '[data-sea-tryon-try-again]' ),
 		login: document.querySelector( '[data-sea-tryon-login]' ),
 		workflow: document.querySelector( '[data-sea-tryon-workflow]' ),
+		retry: document.querySelector( '[data-sea-tryon-error-retry]' ),
 	};
 }
 
@@ -518,7 +519,7 @@ describe( 'Virtual Try-On modal shell', () => {
 				blob: async () => new Blob( [ 'png' ], { type: 'image/png' } ),
 			} );
 
-		const { file, consent, generate, result, resultImage, root, tryAgain } =
+		const { file, consent, generate, result, resultImage, retry, root, tryAgain } =
 			fixture();
 		const image = new File( [ 'image' ], 'person.jpg', {
 			type: 'image/jpeg',
@@ -570,7 +571,7 @@ describe( 'Virtual Try-On modal shell', () => {
 			json: async () => ( {
 				id: 'b'.repeat( 32 ),
 				status: 'failed',
-				error: { message: 'Please try another image.' },
+				error: { message: 'Please choose another photo.', retry_allowed: false },
 			} ),
 		} );
 		for ( let step = 0; step < 6; step++ ) {
@@ -578,6 +579,7 @@ describe( 'Virtual Try-On modal shell', () => {
 		}
 		expect( result.hidden ).toBe( false );
 		expect( root.dataset.state ).toBe( 'failed' );
+		expect( retry.hidden ).toBe( true );
 	} );
 
 	it( 'shows a REST failure only in the inline upload error', async () => {

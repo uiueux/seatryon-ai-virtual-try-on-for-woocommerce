@@ -3,7 +3,7 @@ Tags: woocommerce, virtual try-on, ai image, product visualization
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.1.2
+Stable tag: 1.1.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,7 +15,7 @@ SeaTryon – AI Virtual Try-On for WooCommerce adds a Virtual Try-On experience 
 
 The plugin supports clothing, jewelry, glasses, wigs, furniture, and general product placement. Merchants choose either the WordPress AI Client or the SeaAI Universal X gateway. WordPress AI credentials are managed centrally under Settings > Connectors and are never stored by this plugin.
 
-Version 1.1.2 uses the provider-agnostic WordPress AI Client introduced in WordPress 7.0. Validate the selected connector and complete generation flow in a staging environment before enabling it for customers.
+Version 1.1.4 uses the provider-agnostic WordPress AI Client introduced in WordPress 7.0. Validate the selected connector and complete generation flow in a staging environment before enabling it for customers.
 
 You can choose a demo on the [demo website](https://seatheme.net/sea-tryon/) to try it out, with 3 free trials without logging in. 
 
@@ -45,7 +45,7 @@ The plugin does not intentionally send customer names, email addresses, user IDs
 
 === SeaAI Universal X gateway ===
 
-When SeaAI is selected, the plugin sends the same two images and the generation prompt to the configured SeaAI API root. The default gateway is `https://theminitech.net/wp-json/seaai/v1`; the store owner may configure another HTTPS SeaAI gateway. The images are uploaded for the generation request, and the generated result is downloaded from that gateway. The configured SeaAI API key is sent in an authorization header when the store owner tests the connection and when a generation request runs. Review TheMiniTech's [Terms of Service](https://theminitech.net/terms-of-service-en/) and [Privacy Policy](https://theminitech.com/privacy-policy/) before using this gateway.
+When SeaAI is selected, the plugin sends the same two images and the generation prompt to the configured SeaAI API root. The default gateway is `https://theminitech.net/wp-json/seaai/v1`; the store owner may configure another HTTPS SeaAI gateway. The images are uploaded for the generation request, and the generated result is downloaded from that gateway. The configured SeaAI API key is sent in an authorization header when the store owner tests the connection and when a generation request runs. Review TheMiniTech's [Terms of Service](https://theminitech.net/terms-of-service-en/) and [Privacy Policy](https://theminitech.com/privacy-policy/) before using this gateway. You can create and get your key on [the profile page](https://theminitech.net/profile/) of [TheMiniTech.net](https://theminitech.net).
 
 External providers control their own processing, retention, hosting locations, and policies. Store owners are responsible for obtaining any required consent, reviewing the linked provider terms and privacy policy, and updating their site's privacy notice.
 
@@ -104,6 +104,12 @@ Guest generation is disabled by default. The store owner can enable it and set s
 The WordPress AI Client and the SeaAI Universal X gateway are supported. For WordPress AI, configure a site connector that supports image editing under Settings > Connectors. Only one provider is active at a time. (WordPress AI is currently not recommended for use, because I tested OPENAI and found that it does not support the latest Image 2 model or multi-image mode, which means it does not support the try-on feature. I do not currently have the conditions to test Gemini. If you wish to use Gemini and would like my assistance, please contact me seatheme.net@gmail.com). The cost per generation is 30 credits for SeaAI Universal X, which is equivalent to 0.05 USD (based on the $9 for 5,000 credits package). Please note that this price is for reference only and is not fixed; it may fluctuate based on cost calculations.
 
 == Changelog ==
+
+= 1.1.4 - 2026-09-07 =
+* Stop retrying when an upstream image provider rejects an image for safety reasons.
+
+* Added a configurable whole-site daily generation limit with a default of 30 dispatches.
+* Added daily IP enforcement alongside the anonymous session limit.
 
 = 1.1.2 - 2026-08-27 =
 * Added hats, shoes, and handbags experience types to product settings.

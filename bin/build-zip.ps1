@@ -1,6 +1,6 @@
 param(
 	[Parameter(Position = 0)]
-	[string] $Version = '1.1.2',
+	[string] $Version = '1.1.4',
 
 	[switch] $FolderOnly
 )

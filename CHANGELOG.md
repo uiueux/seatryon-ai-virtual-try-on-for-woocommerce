@@ -11,6 +11,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Real WordPress AI Connector and SeaAI person/scene staging generations.
 - WooCommerce 11.x, QIT, and the remaining release compatibility matrix.
 
+## [1.1.4] - 2026-09-07
+
+- Stop retrying when an upstream image provider rejects an image for safety reasons.
+
+
+- Added a configurable whole-site daily generation limit, with a default of 30 dispatches.
+- Added daily IP enforcement alongside the existing anonymous session limit.
+- Excluded local agent instructions from production packages.
+
 ## [1.1.2] - 2026-08-27
 
 - Added hats, shoes, and handbags experience types to product settings.

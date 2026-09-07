@@ -283,8 +283,10 @@ function showFailure( state, error ) {
 	state.error.textContent = message;
 	state.error.hidden = false;
 	if ( state.retry ) {
-		state.retry.hidden = false;
-		state.retry.focus();
+		state.retry.hidden = false === error?.retryAllowed;
+		if ( ! state.retry.hidden ) {
+			state.retry.focus();
+		}
 	}
 }
 
@@ -345,7 +347,9 @@ async function pollJob( state, job, config ) {
 			return;
 		}
 		if ( current.status === 'failed' || current.status === 'expired' ) {
-			throw new Error( current.error?.message || messages.genericError );
+			const error = new Error( current.error?.message || messages.genericError );
+			error.retryAllowed = false !== current.error?.retry_allowed;
+			throw error;
 		}
 
 		if ( document.hidden ) {

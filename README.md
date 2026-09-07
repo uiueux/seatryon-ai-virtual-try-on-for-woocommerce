@@ -13,7 +13,7 @@ SeaTryon is a free WordPress plugin for WooCommerce. It requires a WordPress sit
 
 ## Project status
 
-Version `1.1.2` uses the provider-agnostic WordPress AI Client. The automated implementation gates pass; live connector and final compatibility evidence should still be completed in staging before broad deployment.
+Version `1.1.3` uses the provider-agnostic WordPress AI Client. The automated implementation gates pass; live connector and final compatibility evidence should still be completed in staging before broad deployment.
 
 ## Compatibility baseline
 
@@ -75,7 +75,7 @@ On Windows PowerShell, use `npm.cmd` in place of `npm` when the PowerShell execu
 The release archive is assembled from an explicit deny list in `.distignore` and audited before it is accepted:
 
 ```sh
-bash bin/build-zip.sh 1.1.2
+bash bin/build-zip.sh 1.1.3
 ```
 
 The command requires Bash, `rsync`, and `zip`. It writes `dist/seatryon-ai-virtual-try-on-for-woocommerce-<version>.zip`. Internal documents, tests, fixtures, development dependencies, source maps, and likely credential files are excluded. The CI release workflow repeats the audit against the finished ZIP.

@@ -19,13 +19,19 @@ final class SeaAIErrorMapper {
 	/**
 	 * Normalize an unsuccessful gateway response without retaining its body.
 	 *
-	 * Only provider-controlled code/type fields are inspected. Gateway messages
-	 * are deliberately ignored because they may echo prompts or remote URLs.
+	 * Machine fields are preferred. A fixed provider safety phrase is also
+	 * inspected solely to recover a safety rejection after a gateway 502 wrapper;
+	 * messages are never reflected to customers or retained.
 	 *
 	 * @param int    $status HTTP status.
 	 * @param string $body   Raw bounded response body.
 	 */
 	public function from_http_response( int $status, string $body ): ProviderError {
+		$discriminators = $this->safe_discriminators( $body );
+		if ( false !== strpos( $discriminators, 'moderation_blocked' ) || false !== strpos( $discriminators, 'image_generation_user_error' ) || $this->has_known_safety_rejection_message( $body ) ) {
+			return new ProviderError( 'provider_safety_rejected', 'The image was rejected by the provider safety system.', false, null, $status );
+		}
+
 		if ( 400 === $status ) {
 			return new ProviderError( 'provider_invalid_request', 'The SeaAI gateway rejected the image request.', false, null, $status );
 		}
@@ -39,7 +45,6 @@ final class SeaAIErrorMapper {
 		}
 
 		if ( 403 === $status ) {
-			$discriminators = $this->safe_discriminators( $body );
 			if ( false !== strpos( $discriminators, 'rate_limit' ) || false !== strpos( $discriminators, 'rate-limit' ) ) {
 				return new ProviderError( 'provider_rate_limited', 'The SeaAI key is rate limited.', false, null, $status );
 			}
@@ -104,5 +109,40 @@ final class SeaAIErrorMapper {
 		}
 
 		return implode( ' ', $values );
+	}
+
+	/**
+	 * Recognize the fixed upstream safety-rejection wording when an intermediary
+	 * has discarded the structured error code and returned a generic 502.
+	 *
+	 * Values are inspected only for this exact provider phrase and are never
+	 * shown to customers or retained by the plugin.
+	 *
+	 * @param string $body Raw bounded response body.
+	 */
+	private function has_known_safety_rejection_message( string $body ): bool {
+		$decoded = json_decode( $body, true );
+		if ( ! is_array( $decoded ) ) {
+			return false;
+		}
+
+		$messages = array();
+		if ( isset( $decoded['message'] ) && is_string( $decoded['message'] ) ) {
+			$messages[] = $decoded['message'];
+		}
+		if ( isset( $decoded['error'] ) && is_array( $decoded['error'] ) && isset( $decoded['error']['message'] ) && is_string( $decoded['error']['message'] ) ) {
+			$messages[] = $decoded['error']['message'];
+		}
+		if ( isset( $decoded['base_resp'] ) && is_array( $decoded['base_resp'] ) && isset( $decoded['base_resp']['status_msg'] ) && is_string( $decoded['base_resp']['status_msg'] ) ) {
+			$messages[] = $decoded['base_resp']['status_msg'];
+		}
+
+		foreach ( $messages as $message ) {
+			if ( false !== strpos( strtolower( $message ), 'rejected by the safety system' ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

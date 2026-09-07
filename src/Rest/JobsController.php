@@ -474,10 +474,12 @@ final class JobsController extends WP_REST_Controller {
 		return $this->error( $data['code'], $data['message'], $this->status_for_error( $data['code'] ) );
 	}
 
-	/** @return array{code:string,message:string} */
+	/** @return array{code:string,message:string,retry_allowed:bool} */
 	private function public_error_data( string $code ): array {
-		$aliases = array(
+		$retry_allowed = 'provider_safety_rejected' !== $code;
+		$aliases       = array(
 			'openai_moderation_blocked'             => 'provider_rejected',
+			'provider_safety_rejected'              => 'provider_rejected',
 			'openai_image_user_error'               => 'provider_rejected',
 			'openai_invalid_request'                => 'provider_rejected',
 			'provider_invalid_request'              => 'provider_rejected',
@@ -513,8 +515,9 @@ final class JobsController extends WP_REST_Controller {
 		}
 
 		return array(
-			'code'    => $code,
-			'message' => $messages[ $code ],
+			'code'          => $code,
+			'message'       => $messages[ $code ],
+			'retry_allowed' => $retry_allowed,
 		);
 	}
 

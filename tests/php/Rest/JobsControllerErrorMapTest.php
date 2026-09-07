@@ -44,6 +44,18 @@ namespace SeaTryOn\Tests\Rest {
 			$this->assertStringNotContainsString( $input, $data['message'] );
 		}
 
+		public function test_safety_rejection_tells_the_frontend_not_to_retry(): void {
+			$reflection = new ReflectionClass( JobsController::class );
+			$controller = $reflection->newInstanceWithoutConstructor();
+			$map        = $reflection->getMethod( 'public_error_data' );
+			$map->setAccessible( true );
+			$data = $map->invoke( $controller, 'provider_safety_rejected' );
+
+			self::assertSame( 'provider_rejected', $data['code'] );
+			self::assertFalse( $data['retry_allowed'] );
+			self::assertSame( 'This image could not be processed. Please choose another photo.', $data['message'] );
+		}
+
 		/** @return array<string,array{string,string,int}> */
 		public function mapping_provider(): array {
 			return array(
