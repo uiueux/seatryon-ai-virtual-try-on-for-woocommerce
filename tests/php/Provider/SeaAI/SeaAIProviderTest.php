@@ -86,31 +86,101 @@ final class SeaAIProviderTest extends TestCase {
 		self::assertCount( 4, $client->requests );
 	}
 
-	/** Unexpected task_id fails closed and never reaches the legacy query route. */
-	public function test_task_fixture_is_contract_error_and_never_queries(): void {
-		$fixture = $this->fixture( 'seaai-generate-task-unexpected.json' );
-		$legacy  = $this->fixture( 'seaai-query-legacy-evidence.json' );
-		$client  = new SeaAIFakeHttpClient(
+	/** A task response is polled server-side until its successful image result is stored. */
+	public function test_polls_async_task_until_success_and_stores_result(): void {
+		$now    = 0.0;
+		$sleeps = array();
+		$client = new SeaAIFakeHttpClient(
 			array(
 				$this->upload_response( 'customer.png' ),
 				$this->upload_response( 'product.png' ),
-				$this->json_response( 200, $fixture['response']['body'] ),
+				$this->json_response( 200, array( 'task_id' => 'uxg_123' ) ),
+				$this->json_response( 200, array( 'status' => 'running' ) ),
+				$this->json_response( 200, array( 'status' => 'success', 'results' => array( array( 'imageUrl' => 'https://images.example.com/result.png' ) ) ), array( 'X-Request-ID' => 'query-safe-123' ) ),
+				new HttpResponse( 200, array( 'Content-Type' => 'image/png' ), $this->png_bytes() ),
+			)
+		);
+		$storage = new SeaAIFakeStorage( $this->png_bytes() );
+		$result  = $this->provider(
+			$client,
+			$storage,
+			'https://gateway.example.test/wp-json/seaai/v1',
+			false,
+			null,
+			static function () use ( &$now ): float {
+				return $now;
+			},
+			static function ( int $seconds ) use ( &$now, &$sleeps ): void {
+				$sleeps[] = $seconds;
+				$now     += $seconds;
+			}
+		)->generate( $this->request() );
+
+		self::assertCount( 6, $client->requests );
+		self::assertSame( '/forward/image/query', $this->path_suffix( $client->requests[3]->url() ) );
+		self::assertSame( '/forward/image/query', $this->path_suffix( $client->requests[4]->url() ) );
+		self::assertSame( array( 'task_id' => 'uxg_123' ), json_decode( $client->requests[3]->body(), true ) );
+		self::assertSame( 'Bearer ' . $this->provider_key( 'test-safe-key' ), $client->requests[3]->headers()['Authorization'] );
+		self::assertSame( 'https://images.example.com/result.png', $client->requests[5]->url() );
+		self::assertSame( array( 2 ), $sleeps );
+		self::assertSame( self::SCOPE, $storage->last_write['scope'] );
+		self::assertSame( 'query-safe-123', $result->provider_request_id() );
+	}
+
+	/** A failed task uses the existing safe error mapping and never leaks gateway details. */
+	public function test_async_failed_task_maps_safety_error_without_upstream_message(): void {
+		$client = new SeaAIFakeHttpClient(
+			array(
+				$this->upload_response( 'customer.png' ),
+				$this->upload_response( 'product.png' ),
+				$this->json_response( 200, array( 'task_id' => 'uxg_456' ) ),
+				$this->json_response( 200, array( 'status' => 'failed', 'errorMessage' => 'Your request was rejected by the safety system. Private request details.' ) ),
+			)
+		);
+
+		$error = $this->capture_error( $client );
+		self::assertSame( 'provider_safety_rejected', $error->provider_error()->code() );
+		self::assertFalse( $error->provider_error()->is_retryable() );
+		self::assertStringNotContainsString( 'Private request details', $error->getMessage() );
+		self::assertCount( 4, $client->requests );
+	}
+
+	/** A task that remains unfinished until the deadline returns a retryable timeout. */
+	public function test_async_task_timeout_is_retryable(): void {
+		$now    = 0.0;
+		$sleeps = array();
+		$client = new SeaAIFakeHttpClient(
+			array(
+				$this->upload_response( 'customer.png' ),
+				$this->upload_response( 'product.png' ),
+				$this->json_response( 200, array( 'task_id' => 'uxg_789' ) ),
+				$this->json_response( 200, array( 'status' => 'running' ) ),
 			)
 		);
 
 		try {
-			$this->provider( $client, new SeaAIFakeStorage( $this->png_bytes() ) )->generate( $this->request() );
-			self::fail( 'Expected provider_contract_error.' );
+			$this->provider(
+				$client,
+				new SeaAIFakeStorage( $this->png_bytes() ),
+				'https://gateway.example.test/wp-json/seaai/v1',
+				false,
+				null,
+				static function () use ( &$now ): float {
+					return $now;
+				},
+				static function ( int $seconds ) use ( &$now, &$sleeps ): void {
+					$sleeps[] = $seconds;
+					$now     = 240.0;
+				}
+			)->generate( $this->request() );
+			self::fail( 'Expected a task timeout.' );
 		} catch ( ProviderException $exception ) {
-			self::assertSame( $fixture['expected']['plugin_error_code'], $exception->provider_error()->code() );
-			self::assertFalse( $exception->provider_error()->is_retryable() );
-			self::assertSame( $fixture['response']['body']['task_id'], $exception->provider_error()->diagnostic_reference() );
+			self::assertSame( 'provider_upstream_failure', $exception->provider_error()->code() );
+			self::assertTrue( $exception->provider_error()->is_retryable() );
 		}
 
-		self::assertCount( 3, $client->requests );
-		foreach ( $client->requests as $request ) {
-			self::assertStringNotContainsString( $legacy['request']['path'], $request->url() );
-		}
+		self::assertSame( array( 2 ), $sleeps );
+		self::assertCount( 4, $client->requests );
 	}
 
 	/** Every malformed non-empty images shape is a permanent contract error. */
@@ -122,7 +192,7 @@ final class SeaAIProviderTest extends TestCase {
 			array( 'images' => array( array( 'url' => '' ) ) ),
 			array( 'images' => array( array( 'other' => 'https://images.example.com/result.png' ) ) ),
 			array(
-				'task_id' => 'task_with_images_is_still_async',
+				'task_id' => 123,
 				'images'  => array( 'https://images.example.com/result.png' ),
 			),
 		);
@@ -258,14 +328,18 @@ final class SeaAIProviderTest extends TestCase {
 		SeaAIFakeStorage $storage,
 		string $base_url = 'https://gateway.example.test/wp-json/seaai/v1',
 		bool $allow_insecure_local = false,
-		?callable $environment = null
+		?callable $environment = null,
+		?callable $clock = null,
+		?callable $sleeper = null
 	): SeaAIProvider {
 		$validator = new ImageValidator( 10485760, 4096, 16777216, false );
 		$policy    = new UrlSafetyPolicy(
 			$allow_insecure_local,
 			static function ( string $host ): array {
 				return 0 === strpos( $host, '127.' ) ? array( $host ) : array( '8.8.8.8' );
-			}
+			},
+			$clock,
+			$sleeper
 		);
 		$download = new RemoteImageDownloader( $client, $validator, $policy );
 
@@ -281,7 +355,9 @@ final class SeaAIProviderTest extends TestCase {
 			$environment,
 			static function ( string $host ): array {
 				return 0 === strpos( $host, '127.' ) ? array( $host ) : array( '8.8.8.8' );
-			}
+			},
+			$clock,
+			$sleeper
 		);
 	}
 

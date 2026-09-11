@@ -31,7 +31,7 @@ defined( 'ABSPATH' ) || exit;
 // phpcs:disable WordPress.Security.EscapeOutput.ExceptionNotEscaped
 
 /**
- * Uploads two private references and executes one synchronous universal_x job.
+ * Uploads two private references and executes one Universal X job.
  */
 final class SeaAIProvider implements ProviderInterface {
 
@@ -39,6 +39,7 @@ final class SeaAIProvider implements ProviderInterface {
 	private const MAX_RESULT_BYTES        = 10485760;
 	private const MAX_HTTP_RESPONSE_BYTES = 1048576;
 	private const TIMEOUT_SECONDS         = 240;
+	private const POLL_INTERVAL_SECONDS   = 2;
 
 	/**
 	 * Shared provider transport.
@@ -96,8 +97,14 @@ final class SeaAIProvider implements ProviderInterface {
 	 */
 	private $error_mapper;
 
+	/** @var callable */
+	private $clock;
+
+	/** @var callable */
+	private $sleeper;
+
 	/**
-	 * Initialize the synchronous SeaAI provider.
+	 * Initialize the SeaAI provider.
 	 *
 	 * @param ProviderTransport         $transport                    Shared provider HTTP transport.
 	 * @param RemoteImageDownloader     $downloader                   SSRF-safe result downloader.
@@ -109,6 +116,8 @@ final class SeaAIProvider implements ProviderInterface {
 	 * @param bool                      $allow_insecure_local_development Explicit localhost HTTP exception.
 	 * @param callable|null             $environment_type             Test seam returning the WordPress environment type.
 	 * @param callable|null             $url_resolver                 Test seam returning resolved IP addresses.
+	 * @param callable|null             $clock                        Test seam returning elapsed seconds.
+	 * @param callable|null             $sleeper                      Test seam waiting between task queries.
 	 * @throws InvalidArgumentException When the API root or user key is invalid.
 	 */
 	public function __construct(
@@ -121,7 +130,9 @@ final class SeaAIProvider implements ProviderInterface {
 		?SeaAIErrorMapper $error_mapper = null,
 		bool $allow_insecure_local_development = false,
 		?callable $environment_type = null,
-		?callable $url_resolver = null
+		?callable $url_resolver = null,
+		?callable $clock = null,
+		?callable $sleeper = null
 	) {
 		$environment          = $this->environment_type( $environment_type );
 		$allow_insecure_local = $allow_insecure_local_development
@@ -140,10 +151,12 @@ final class SeaAIProvider implements ProviderInterface {
 		$this->image_validator = $image_validator ?? new ImageValidator( self::MAX_RESULT_BYTES );
 		$this->url_policy      = new UrlSafetyPolicy( $allow_insecure_local, $url_resolver );
 		$this->error_mapper    = $error_mapper ?? new SeaAIErrorMapper();
+		$this->clock           = $clock ?? static function (): float { return microtime( true ); };
+		$this->sleeper         = $sleeper ?? static function ( int $seconds ): void { sleep( $seconds ); };
 	}
 
 	/**
-	 * Generate and privately store one synchronous Universal X result.
+	 * Generate and privately store one Universal X result.
 	 *
 	 * @param ProviderRequest $request Normalized provider request.
 	 * @return ProviderResult
@@ -188,7 +201,15 @@ final class SeaAIProvider implements ProviderInterface {
 			throw new ProviderException( $this->error_mapper->from_http_response( $response->status(), $response->body() ) );
 		}
 
-		$urls = $this->parse_generation_urls( $response->body(), $response->status() );
+		$task_id = $this->task_id_from_generation_response( $response->body(), $response->status() );
+		if ( null === $task_id ) {
+			$urls                = $this->parse_generation_urls( $response->body(), $response->status() );
+			$provider_request_id = $response->header( 'x-request-id' );
+		} else {
+			$polled              = $this->poll_generation_task( $task_id );
+			$urls                = array( $polled['url'] );
+			$provider_request_id = $polled['request_id'];
+		}
 
 		try {
 			$result = $this->downloader->download( $urls[0], self::TIMEOUT_SECONDS, self::MAX_RESULT_BYTES );
@@ -205,7 +226,7 @@ final class SeaAIProvider implements ProviderInterface {
 		return $this->store_result(
 			$request->customer_image_reference(),
 			$result,
-			$response->header( 'x-request-id' )
+			$provider_request_id
 		);
 	}
 
@@ -264,10 +285,120 @@ final class SeaAIProvider implements ProviderInterface {
 	}
 
 	/**
-	 * Strictly parse the synchronous Universal X response.
+	 * Return an asynchronous task identifier when the generation response has one.
 	 *
-	 * An unexpected task_id is intentionally not queried: the installed query
-	 * route belongs to a legacy provider and is not a Universal X contract.
+	 * @throws ProviderException When task_id is present but invalid.
+	 */
+	private function task_id_from_generation_response( string $body, int $status ): ?string {
+		$decoded = $this->decode_json_object( $body, $status );
+		if ( ! array_key_exists( 'task_id', $decoded ) ) {
+			return null;
+		}
+		if ( ! is_string( $decoded['task_id'] ) || 1 !== preg_match( '/^[A-Za-z0-9._:-]{1,128}$/D', $decoded['task_id'] ) ) {
+			throw new ProviderException( $this->error_mapper->contract_error( $status ) );
+		}
+		return $decoded['task_id'];
+	}
+
+	/**
+	 * Poll an accepted Universal X task until it returns a final result.
+	 *
+	 * @return array{url:string,request_id:?string}
+	 * @throws ProviderException When polling cannot produce a safe image result.
+	 */
+	private function poll_generation_task( string $task_id ): array {
+		$deadline = $this->current_time() + self::TIMEOUT_SECONDS;
+		while ( true ) {
+			$remaining = $deadline - $this->current_time();
+			if ( $remaining <= 0 ) {
+				throw new ProviderException( $this->poll_timeout_error() );
+			}
+			try {
+				$response = $this->transport->post_json(
+					$this->base_url . '/forward/image/query',
+					$this->auth_headers(),
+					array( 'task_id' => $task_id ),
+					max( 1, min( self::TIMEOUT_SECONDS, (int) ceil( $remaining ) ) ),
+					self::MAX_HTTP_RESPONSE_BYTES
+				);
+			} catch ( TransportException $exception ) {
+				throw new ProviderException( $this->transport_error( $exception ) );
+			}
+			if ( $response->status() < 200 || $response->status() > 299 ) {
+				throw new ProviderException( $this->error_mapper->from_http_response( $response->status(), $response->body() ) );
+			}
+			$decoded = $this->decode_json_object( $response->body(), $response->status() );
+			$status  = isset( $decoded['status'] ) && is_string( $decoded['status'] ) ? strtolower( trim( $decoded['status'] ) ) : '';
+			if ( 'success' === $status ) {
+				return array( 'url' => $this->query_result_url( $decoded, $response->status() ), 'request_id' => $response->header( 'x-request-id' ) );
+			}
+			if ( 'failed' === $status ) {
+				throw new ProviderException( $this->query_failure_error( $decoded ) );
+			}
+			if ( ! $this->is_pending_task_status( $status ) ) {
+				throw new ProviderException( $this->error_mapper->contract_error( $response->status() ) );
+			}
+			$remaining = $deadline - $this->current_time();
+			if ( $remaining <= 0 ) {
+				throw new ProviderException( $this->poll_timeout_error() );
+			}
+			call_user_func( $this->sleeper, max( 1, min( self::POLL_INTERVAL_SECONDS, (int) ceil( $remaining ) ) ) );
+		}
+	}
+
+	private function is_pending_task_status( string $status ): bool {
+		return in_array( $status, array( 'pending', 'queued', 'running', 'processing', 'created', 'submitted', 'in_progress' ), true );
+	}
+
+	private function query_result_url( array $decoded, int $status ): string {
+		if ( ! isset( $decoded['results'] ) || ! is_array( $decoded['results'] ) ) {
+			throw new ProviderException( $this->error_mapper->contract_error( $status ) );
+		}
+		foreach ( $decoded['results'] as $entry ) {
+			$url = null;
+			if ( is_string( $entry ) ) {
+				$url = trim( $entry );
+			} elseif ( is_array( $entry ) && isset( $entry['url'] ) && is_string( $entry['url'] ) ) {
+				$url = trim( $entry['url'] );
+			} elseif ( is_array( $entry ) && isset( $entry['imageUrl'] ) && is_string( $entry['imageUrl'] ) ) {
+				$url = trim( $entry['imageUrl'] );
+			}
+			if ( null === $url || '' === $url ) {
+				continue;
+			}
+			try {
+				$this->url_policy->assert_safe( $url );
+			} catch ( UnsafeUrlException $exception ) {
+				continue;
+			}
+			return $url;
+		}
+		throw new ProviderException( $this->error_mapper->contract_error( $status ) );
+	}
+
+	private function query_failure_error( array $decoded ): ProviderError {
+		$payload = array();
+		if ( isset( $decoded['errorMessage'] ) && is_string( $decoded['errorMessage'] ) ) {
+			$payload['message'] = $decoded['errorMessage'];
+		} elseif ( array_key_exists( 'error', $decoded ) ) {
+			$payload['error'] = $decoded['error'];
+		}
+		$body = json_encode( $payload );
+		return $this->error_mapper->from_http_response( 502, is_string( $body ) ? $body : '{}' );
+	}
+
+	private function poll_timeout_error(): ProviderError {
+		return new ProviderError( 'provider_upstream_failure', 'The SeaAI image task did not complete in time.', true );
+	}
+
+	private function current_time(): float {
+		return (float) call_user_func( $this->clock );
+	}
+	/**
+	 * Strictly parse a synchronous Universal X response.
+	 *
+	 * Asynchronous task replies are detected and polled before this parser runs.
+	 *
 	 *
 	 * @param string $body   Raw bounded response body.
 	 * @param int    $status HTTP success status.

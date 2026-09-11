@@ -146,8 +146,11 @@ final class JobWorker {
 			$this->logger->error(
 				'The job worker encountered a safe internal failure.',
 				array(
-					'job_id'  => $job->id(),
-					'attempt' => $attempt,
+					'job_id'          => $job->id(),
+					'attempt'         => $attempt,
+					'exception_class'  => get_class( $exception ),
+					'exception_code'   => (int) $exception->getCode(),
+					'exception_origin' => basename( $exception->getFile() ) . ':' . $exception->getLine(),
 				)
 			);
 			$this->terminal_failure( $job, new ProviderError( 'generation_failed', 'The preview could not be generated.', false ) );
@@ -155,6 +158,18 @@ final class JobWorker {
 	}
 
 	private function handle_provider_error( Job $job, int $attempt, ProviderError $error ): void {
+		$this->logger->warning(
+			'Virtual Try-On provider request failed.',
+			array(
+				'job_id'                  => $job->id(),
+				'dispatch_attempt'        => $attempt,
+				'provider_error_code'     => $error->code(),
+				'provider_error_retryable' => $error->is_retryable(),
+				'provider_http_status'    => $error->http_status(),
+				'diagnostic_reference'    => $error->diagnostic_reference(),
+			)
+		);
+
 		if ( $error->is_retryable() && $attempt < $this->maximum_retry_attempt( $error ) ) {
 			$next  = $attempt + 1;
 			$delay = $error->retry_after_seconds();

@@ -112,6 +112,10 @@ final class JobWorkerTest extends TestCase {
 		self::assertSame( 0, $fixture->quota_store->count() );
 		self::assertSame( 0, $provider->calls );
 		self::assertSame( JobStatus::FAILED, $fixture->repository->find_by_id( $fixture->job_id )->status()->value() );
+		self::assertSame( 'RuntimeException', $fixture->log_backend->records[0]['context']['exception_class'] );
+		self::assertSame( 0, $fixture->log_backend->records[0]['context']['exception_code'] );
+		self::assertStringStartsWith( 'JobWorkerTest.php:', $fixture->log_backend->records[0]['context']['exception_origin'] );
+		self::assertStringNotContainsString( 'D:', $fixture->log_backend->records[0]['context']['exception_origin'] );
 	}
 
 	public function test_terminal_provider_failure_is_logged_with_safe_diagnostics(): void {
@@ -124,11 +128,14 @@ final class JobWorkerTest extends TestCase {
 
 		$fixture->worker->handle( $fixture->job_id, 0 );
 
-		self::assertCount( 1, $fixture->log_backend->records );
-		self::assertSame( 'error', $fixture->log_backend->records[0]['level'] );
+		self::assertCount( 2, $fixture->log_backend->records );
+		self::assertSame( 'warning', $fixture->log_backend->records[0]['level'] );
 		self::assertSame( 'openai_authentication_failed', $fixture->log_backend->records[0]['context']['provider_error_code'] );
+		self::assertFalse( $fixture->log_backend->records[0]['context']['provider_error_retryable'] );
 		self::assertSame( 401, $fixture->log_backend->records[0]['context']['provider_http_status'] );
 		self::assertSame( 'request_123', $fixture->log_backend->records[0]['context']['diagnostic_reference'] );
+		self::assertSame( 'error', $fixture->log_backend->records[1]['level'] );
+		self::assertSame( 'openai_authentication_failed', $fixture->log_backend->records[1]['context']['provider_error_code'] );
 	}
 
 	public function test_quota_exempt_manager_dispatches_without_consuming_quota(): void {
