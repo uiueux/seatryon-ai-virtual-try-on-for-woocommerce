@@ -3,7 +3,7 @@ Tags: woocommerce, virtual try-on, ai image, product visualization
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.1.4
+Stable tag: 1.1.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,7 +15,7 @@ SeaTryon – AI Virtual Try-On for WooCommerce adds a Virtual Try-On experience 
 
 The plugin supports clothing, jewelry, glasses, wigs, furniture, and general product placement. Merchants choose either the WordPress AI Client or the SeaAI Universal X gateway. WordPress AI credentials are managed centrally under Settings > Connectors and are never stored by this plugin.
 
-Version 1.1.4 uses the provider-agnostic WordPress AI Client introduced in WordPress 7.0. Validate the selected connector and complete generation flow in a staging environment before enabling it for customers.
+Version 1.1.5 uses the provider-agnostic WordPress AI Client introduced in WordPress 7.0. Validate the selected connector and complete generation flow in a staging environment before enabling it for customers.
 
 You can choose a demo on the [demo website](https://seatheme.net/sea-tryon/) to try it out, with 3 free trials without logging in. 
 
@@ -104,6 +104,9 @@ Guest generation is disabled by default. The store owner can enable it and set s
 The WordPress AI Client and the SeaAI Universal X gateway are supported. For WordPress AI, configure a site connector that supports image editing under Settings > Connectors. Only one provider is active at a time. (WordPress AI is currently not recommended for use, because I tested OPENAI and found that it does not support the latest Image 2 model or multi-image mode, which means it does not support the try-on feature. I do not currently have the conditions to test Gemini. If you wish to use Gemini and would like my assistance, please contact me seatheme.net@gmail.com). The cost per generation is 30 credits for SeaAI Universal X, which is equivalent to 0.05 USD (based on the $9 for 5,000 credits package). Please note that this price is for reference only and is not fixed; it may fluctuate based on cost calculations.
 
 == Changelog ==
+
+= 1.1.5 - 2026-09-12 =
+* Uses a dedicated rate limit for asynchronous image-query polling so long-running generations are not blocked by upload and generation requests.
 
 = 1.1.4 - 2026-09-07 =
 * Stop retrying when an upstream image provider rejects an image for safety reasons.

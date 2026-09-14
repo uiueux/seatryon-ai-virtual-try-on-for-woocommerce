@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Real WordPress AI Connector and SeaAI person/scene staging generations.
 - WooCommerce 11.x, QIT, and the remaining release compatibility matrix.
 
+## [1.1.5] - 2026-09-12
+
+- Uses a dedicated rate limit for asynchronous image-query polling so long-running generations are not blocked by upload and generation requests.
+
 ## [1.1.4] - 2026-09-07
 
 - Stop retrying when an upstream image provider rejects an image for safety reasons.
