@@ -32,6 +32,41 @@ final class SeaAIProviderTest extends TestCase {
 	private const CUSTOMER = self::SCOPE . '/customer-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png';
 	private const PRODUCT  = self::SCOPE . '/product-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.png';
 
+	public function test_stores_highway_base64_response_larger_than_one_megabyte_without_download(): void {
+		$bytes = $this->png_bytes() . str_repeat( "\0", 1048576 );
+		$client = new SeaAIFakeHttpClient( array(
+			$this->upload_response( 'customer.png' ),
+			$this->upload_response( 'product.png' ),
+			$this->json_response( 200, array( 'images' => array( 'data:image/png;base64,' . base64_encode( $bytes ) ) ) ),
+		) );
+		$storage = new SeaAIFakeStorage( $this->png_bytes() );
+		$result = $this->provider( $client, $storage )->generate( $this->request() );
+		self::assertCount( 3, $client->requests );
+		self::assertSame( 16777216, $client->requests[2]->max_response_bytes() );
+		self::assertSame( 'image/png', $result->mime_type() );
+		self::assertSame( 'png', $storage->last_write['extension'] );
+		self::assertSame( $bytes, $storage->last_write['contents'] );
+	}
+
+	public function test_rejects_invalid_inline_images_without_network_download(): void {
+		foreach ( array(
+			'data:image/png;base64,%%%invalid',
+			'data:image/png;base64,' . base64_encode( 'not an image' ),
+			'data:image/jpeg;base64,' . base64_encode( $this->png_bytes() ),
+			'data:image/svg+xml;base64,' . base64_encode( '<svg/>' ),
+			'data:image/png;base64,' . base64_encode( str_repeat( 'x', 10485761 ) ),
+		) as $image ) {
+			$client = new SeaAIFakeHttpClient( array(
+				$this->upload_response( 'customer.png' ),
+				$this->upload_response( 'product.png' ),
+				$this->json_response( 200, array( 'images' => array( $image ) ) ),
+			) );
+			$error = $this->capture_error( $client );
+			self::assertSame( 'provider_contract_error', $error->provider_error()->code() );
+			self::assertCount( 3, $client->requests );
+		}
+	}
+
 	/** The happy path uses both M0 success fixtures and the exact canonical body. */
 	public function test_uploads_both_images_in_order_and_generates_exact_fixture_shape(): void {
 		$upload_fixture   = $this->fixture( 'seaai-upload-success.json' );

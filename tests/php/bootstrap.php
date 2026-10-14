@@ -17,3 +17,9 @@ if ( ! is_readable( $sea_tryon_test_autoloader ) ) {
 
 require_once $sea_tryon_test_autoloader;
 
+if ( ! function_exists( 'home_url' ) ) {
+	function home_url( $path = '' ) {
+		return 'https://store.example.test' . $path;
+	}
+}
+

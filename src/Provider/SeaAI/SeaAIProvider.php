@@ -38,6 +38,7 @@ final class SeaAIProvider implements ProviderInterface {
 	private const MODEL                   = 'universal_x';
 	private const MAX_RESULT_BYTES        = 10485760;
 	private const MAX_HTTP_RESPONSE_BYTES = 1048576;
+	private const MAX_GENERATION_RESPONSE_BYTES = 16777216;
 	private const TIMEOUT_SECONDS         = 240;
 	private const POLL_INTERVAL_SECONDS   = 2;
 
@@ -191,7 +192,7 @@ final class SeaAIProvider implements ProviderInterface {
 				$this->auth_headers(),
 				$payload,
 				self::TIMEOUT_SECONDS,
-				self::MAX_HTTP_RESPONSE_BYTES
+				self::MAX_GENERATION_RESPONSE_BYTES
 			);
 		} catch ( TransportException $exception ) {
 			throw new ProviderException( $this->transport_error( $exception ) );
@@ -212,7 +213,9 @@ final class SeaAIProvider implements ProviderInterface {
 		}
 
 		try {
-			$result = $this->downloader->download( $urls[0], self::TIMEOUT_SECONDS, self::MAX_RESULT_BYTES );
+			$result = 0 === strpos( $urls[0], 'data:' )
+				? $this->decode_inline_image( $urls[0] )
+				: $this->downloader->download( $urls[0], self::TIMEOUT_SECONDS, self::MAX_RESULT_BYTES );
 		} catch ( UnsafeUrlException | ImageValidationException $exception ) {
 			throw new ProviderException( $this->error_mapper->contract_error( $response->status() ) );
 		} catch ( TransportException $exception ) {
@@ -438,10 +441,18 @@ final class SeaAIProvider implements ProviderInterface {
 				throw new ProviderException( $this->error_mapper->contract_error( $status ) );
 			}
 
-			try {
-				$this->url_policy->assert_safe( $url );
-			} catch ( UnsafeUrlException $exception ) {
-				throw new ProviderException( $this->error_mapper->contract_error( $status ) );
+			if ( 0 === strpos( $url, 'data:' ) ) {
+				try {
+					$this->decode_inline_image( $url );
+				} catch ( ImageValidationException $exception ) {
+					throw new ProviderException( $this->error_mapper->contract_error( $status ) );
+				}
+			} else {
+				try {
+					$this->url_policy->assert_safe( $url );
+				} catch ( UnsafeUrlException $exception ) {
+					throw new ProviderException( $this->error_mapper->contract_error( $status ) );
+				}
 			}
 
 			$urls[] = $url;
@@ -451,13 +462,27 @@ final class SeaAIProvider implements ProviderInterface {
 	}
 
 	/**
-	 * Decode a JSON object and distinguish malformed JSON from contract drift.
-	 *
-	 * @param string $body   Raw bounded response body.
-	 * @param int    $status HTTP success status.
-	 * @return array<mixed>
-	 * @throws ProviderException When the response is malformed or is not a JSON object.
+	 * Strictly decode a bounded inline PNG/JPEG and verify its actual image data.
 	 */
+	private function decode_inline_image( string $value ): ValidatedImage {
+		$separator = strpos( $value, ',' );
+		$header = false === $separator ? '' : substr( $value, 0, $separator );
+		if ( ! in_array( $header, array( 'data:image/png;base64', 'data:image/jpeg;base64' ), true ) ) {
+			throw new ImageValidationException( 'image_type_not_allowed', 'Unsupported inline image type.' );
+		}
+		$encoded = substr( $value, $separator + 1 );
+		if ( '' === $encoded || strlen( $encoded ) > 4 * (int) ceil( self::MAX_RESULT_BYTES / 3 )
+			|| 1 !== preg_match( '/^[A-Za-z0-9+\/]*={0,2}$/D', $encoded ) ) {
+			throw new ImageValidationException( 'image_invalid_base64', 'Invalid inline image encoding or size.' );
+		}
+		$bytes = base64_decode( $encoded, true );
+		if ( false === $bytes || base64_encode( $bytes ) !== $encoded ) {
+			throw new ImageValidationException( 'image_invalid_base64', 'Invalid inline image encoding.' );
+		}
+		return $this->image_validator->validate( $bytes, 'data:image/png;base64' === $header ? 'image/png' : 'image/jpeg' );
+	}
+
+	/** Decode bounded JSON and distinguish invalid JSON from contract drift. */
 	private function decode_json_object( string $body, int $status ): array {
 		$decoded = json_decode( $body, true );
 		if ( JSON_ERROR_NONE !== json_last_error() ) {
